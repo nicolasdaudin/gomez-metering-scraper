@@ -1,0 +1,89 @@
+import puppeteer, { Page } from 'puppeteer';
+import { GomezMeasure } from './GomezMeasure';
+import { Measure } from './Measure';
+import { Reader } from './Reader';
+
+export class GomezReader implements Reader<GomezMeasure> {
+  private _page: Page | undefined = undefined;
+
+  constructor(private user: string, private password: string) {}
+
+  private async login() {
+    try {
+      const browser = await puppeteer.launch({ headless: false });
+      const page = await browser.newPage();
+      await page.setViewport({ width: 1366, height: 768 });
+      await page.goto('https://ov.gomezgroupmetering.com/preLogin');
+      await page.screenshot({ path: './screenshots/login.png' });
+
+      await page.type('.form-control[name=user]', this.user);
+      await page.type('.form-control[name=password]', this.password);
+
+      console.log('trying to log in');
+      await page.$eval(
+        'body > div.container > div.allblock > div.line-sep > form > button',
+        (el) => el.click()
+      );
+
+      await page.waitForSelector('#lecturasDiariaOption', { timeout: 10000 });
+
+      this._page = page;
+    } catch (err) {
+      console.error(
+        `Could not log with these credentials user=${this.user} password=${this.password}, failed with error: `,
+        err
+      );
+    }
+  }
+
+  async read(): Promise<(GomezMeasure | null)[]> {
+    if (!this._page) {
+      console.log('first, we log in');
+      await this.login();
+    }
+    console.log('lecturasDiarias visible');
+    if (!this._page) return [];
+
+    await this._page.goto(
+      'https://ov.gomezgroupmetering.com/lecturasAbonadoDiario'
+    );
+
+    await this._page.screenshot({ path: './screenshots/consumo.png' });
+
+    const measuresTableFirstMeasureSelector =
+      '#tableLecturas > tbody > tr:nth-child(1) > td:nth-child(6)';
+    await this._page.waitForSelector(measuresTableFirstMeasureSelector);
+
+    const measureRows = await this._page.$$('#tableLecturas > tbody > tr');
+    const measuresForReal: (Measure | null)[] = await Promise.all(
+      measureRows.map(async (element) => {
+        if (!this._page) return null;
+
+        // device serial number is in index 2 of the row
+        // measure date in 3
+        // measure in 5
+        // consumption in 6
+        return GomezMeasure.fromString({
+          deviceSerialNumber: await this._page.evaluate(
+            (element) => element.cells[2].innerText,
+            element
+          ),
+          measureDate: await this._page.evaluate(
+            (element) => element.cells[3].innerText,
+            element
+          ),
+          measure: await this._page.evaluate(
+            (element) => element.cells[5].innerText,
+            element
+          ),
+          consumption: await this._page.evaluate(
+            (element) => element.cells[6].innerText,
+            element
+          ),
+        });
+      })
+    );
+    console.log(measuresForReal);
+    return measuresForReal;
+  }
+}

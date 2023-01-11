@@ -1,45 +1,13 @@
 import express, { Request, Response } from 'express';
-import puppeteer from 'puppeteer';
+import { GomezReader } from './reader/GomezReader';
+
+import dotenv from 'dotenv';
+dotenv.config();
 
 const app = express();
 
-interface Measure {
-  deviceSerialNumber: number;
-  measureDate: Date;
-  measure: number;
-  consumption: number;
-}
-
-class GomezMeasure implements Measure {
-  static fromString({
-    deviceSerialNumber,
-    measureDate,
-    measure,
-    consumption,
-  }: {
-    deviceSerialNumber: string;
-    measureDate: string;
-    measure: string;
-    consumption: string;
-  }): Measure {
-    return new GomezMeasure(
-      +deviceSerialNumber,
-      new Date(measureDate),
-      parseFloat(measure),
-      parseFloat(consumption)
-    );
-  }
-
-  constructor(
-    public deviceSerialNumber: number,
-    public measureDate: Date,
-    public measure: number,
-    public consumption: number
-  ) {}
-}
-
 app.get('/', (req: Request, res: Response): void => {
-  res.send('Hello Gomgez Metering Scraper');
+  res.send('Hello Gomez Metering Scraper');
 });
 
 app.listen(3000, () => {
@@ -50,61 +18,24 @@ app.listen(3000, () => {
 });
 
 app.get('/fetchGomez', async (req: Request, res: Response): Promise<void> => {
-  const browser = await puppeteer.launch({ headless: false });
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1366, height: 768 });
-  await page.goto('https://ov.gomezgroupmetering.com/preLogin');
-  await page.screenshot({ path: './screenshots/login.png' });
-
-  await page.type('.form-control[name=user]', 'nicolas.daudin@gmail.com');
-  await page.type('.form-control[name=password]', 'u7MePLLRfj36B');
-
-  console.log('trying to log in');
-  await page.$eval(
-    'body > div.container > div.allblock > div.line-sep > form > button',
-    (el) => el.click()
+  console.log('Reading from Gomez....');
+  if (!process.env.GOMEZ_USER || !process.env.GOMEZ_PASSWORD) {
+    res.status(500).json({
+      data: [],
+      message: 'User and password missing from environment, please init them',
+    });
+    return;
+  }
+  const reader = new GomezReader(
+    process.env.GOMEZ_USER,
+    process.env.GOMEZ_PASSWORD
   );
+  const measures = reader.read();
 
-  await page.waitForSelector('#lecturasDiariaOption', { timeout: 10000 });
-  console.log('lecturasDiarias visible');
-  await page.goto('https://ov.gomezgroupmetering.com/lecturasAbonadoDiario');
-
-  await page.screenshot({ path: './screenshots/consumo.png' });
-
-  const measuresTableFirstMeasureSelector =
-    '#tableLecturas > tbody > tr:nth-child(1) > td:nth-child(6)';
-  await page.waitForSelector(measuresTableFirstMeasureSelector);
-
-  const measureRows = await page.$$('#tableLecturas > tbody > tr');
-  const measuresForReal = await Promise.all(
-    measureRows.map(async (element) => {
-      // device serial number is in index 2 of the row
-      // measure date in 3
-      // measure in 5
-      // consumption in 6
-      return GomezMeasure.fromString({
-        deviceSerialNumber: await page.evaluate(
-          (element) => element.cells[2].innerText,
-          element
-        ),
-        measureDate: await page.evaluate(
-          (element) => element.cells[3].innerText,
-          element
-        ),
-        measure: await page.evaluate(
-          (element) => element.cells[5].innerText,
-          element
-        ),
-        consumption: await page.evaluate(
-          (element) => element.cells[6].innerText,
-          element
-        ),
-      });
-    })
-  );
-  console.log(measuresForReal);
-
-  res.send('fetching...');
+  res.status(200).json({
+    data: measures,
+    message: 'Succesfully fetched data from Gomez',
+  });
 });
 
 // see https://stackoverflow.com/questions/45093510/eslint-not-working-in-vs-code

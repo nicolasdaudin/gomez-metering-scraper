@@ -4,7 +4,12 @@ Cet outil permet d'extraire depuis la page de Gomez Metering Group les lectures 
 
 Additionnellement, il envoie tous les jours par Whatsapp le résultat des dernières lectures et offre une interface pour voir les dernières lectures et un résumé par mois de la consommation.
 
-Cet outil nécessite d'avoir un compte chez Gomez Metering Group
+Cet outil nécessite d'avoir un compte chez Gomez Metering Group et de rajouter deux variables d'environnements:
+
+```
+GOMEZ_USER=<le login utilisé pour Gomez Metering Group>
+GOMEZ_PASSWORD=<le login utilisé pour Gomez Metering Group>
+```
 
 Pour l'instant, cet outil ne fonctionne qu'avec les credentials de son auteur.
 
