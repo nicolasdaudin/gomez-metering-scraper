@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import { Measure } from './Measure';
 
 export class GomezMeasure implements Measure {
@@ -14,7 +15,7 @@ export class GomezMeasure implements Measure {
   }): Measure {
     return new GomezMeasure(
       +deviceSerialNumber,
-      new Date(measureDate),
+      DateTime.fromFormat(measureDate, `dd'/'MM'/'yyyy`), // parsing things like '11/01/2023' for 11 January 2023
       parseFloat(measure),
       parseFloat(consumption)
     );
@@ -22,7 +23,7 @@ export class GomezMeasure implements Measure {
 
   constructor(
     public deviceSerialNumber: number,
-    public measureDate: Date,
+    public measureDate: DateTime,
     public measure: number,
     public consumption: number
   ) {}

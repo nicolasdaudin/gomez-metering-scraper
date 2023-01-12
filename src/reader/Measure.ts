@@ -1,6 +1,8 @@
+import { DateTime } from 'luxon';
+
 export interface Measure {
   deviceSerialNumber: number;
-  measureDate: Date;
+  measureDate: DateTime;
   measure: number;
   consumption: number;
 }
