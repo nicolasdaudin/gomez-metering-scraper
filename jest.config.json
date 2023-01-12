@@ -1,0 +1,7 @@
+{
+  "verbose": true,
+  "preset": "ts-jest",
+  "testEnvironment": "node",
+  "setupFiles": ["dotenv/config"],
+  "modulePathIgnorePatterns": ["<rootDir>/build/"]
+}
