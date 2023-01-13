@@ -1,3 +1,5 @@
-export interface Reader<T> {
-  read(): Promise<(T | null)[]>;
+import { Measure } from './Measure';
+
+export interface Reader<T extends Measure> {
+  read(): Promise<T[]>;
 }

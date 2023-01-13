@@ -20,7 +20,7 @@ export class GomezReader implements Reader<GomezMeasure> {
 
   async login() {
     try {
-      this._browser = await puppeteer.launch({ headless: false });
+      this._browser = await puppeteer.launch();
       const page = await this._browser.newPage();
       await page.setViewport({ width: 1366, height: 768 });
       await page.goto('https://ov.gomezgroupmetering.com/preLogin');
@@ -46,12 +46,12 @@ export class GomezReader implements Reader<GomezMeasure> {
     }
   }
 
-  async read(): Promise<(GomezMeasure | null)[]> {
+  async read(): Promise<GomezMeasure[]> {
     if (!this._page) {
       console.log('first, we log in');
       await this.login();
     }
-    console.log('lecturasDiarias visible');
+    // console.log('lecturasDiarias visible');
     if (!this._page) return [];
 
     await this._page.goto(
@@ -65,14 +65,11 @@ export class GomezReader implements Reader<GomezMeasure> {
     await this._page.waitForSelector(measuresTableFirstMeasureSelector);
 
     const measureRows = await this._page.$$('#tableLecturas > tbody > tr');
-    const measuresForReal: (Measure | null)[] = await Promise.all(
+    const measuresForReal: Measure[] = (await Promise.all(
       measureRows.map(async (element) => {
         if (!this._page) return null;
 
-        // device serial number is in index 2 of the row
-        // measure date in 3
-        // measure in 5
-        // consumption in 6
+        // device serial number is in index 2 of the row, measure date in 3, measure in 5, consumption in 6
         return GomezMeasure.fromString({
           deviceSerialNumber: await this._page.evaluate(
             (element) => element.cells[2].innerText,
@@ -92,8 +89,9 @@ export class GomezReader implements Reader<GomezMeasure> {
           ),
         });
       })
-    );
-    console.log(measuresForReal);
+    )) as Measure[];
+
+    // console.log(measuresForReal);
     this._browser?.close();
     return measuresForReal;
   }

@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import { GomezReader } from './reader/GomezReader';
 
 import dotenv from 'dotenv';
+import { WhatsappNotifier } from './notifications/WhatsappNotifier';
 dotenv.config();
 
 const app = express();
@@ -22,23 +23,23 @@ app.get('/fetchGomez', async (req: Request, res: Response): Promise<void> => {
   if (!process.env.GOMEZ_USER || !process.env.GOMEZ_PASSWORD) {
     res.status(500).json({
       data: [],
-      message: 'User and password missing from environment, please init them',
+      message:
+        'Gomez Metering credentials missing from environment variables, please init GOMEZ_USER and GOMEZ_PASSWORD',
     });
     return;
   }
+
   const reader = new GomezReader(
     process.env.GOMEZ_USER,
     process.env.GOMEZ_PASSWORD
   );
-  const measures = reader.read();
+  const measures = await reader.read();
+
+  const notifier = new WhatsappNotifier();
+  notifier.notify('+34633142220', measures);
 
   res.status(200).json({
     data: measures,
     message: 'Succesfully fetched data from Gomez',
   });
 });
-
-// see https://stackoverflow.com/questions/45093510/eslint-not-working-in-vs-code
-// see https://stackoverflow.com/questions/56988147/eslint-doesnt-work-in-vscode-but-work-from-terminal
-
-// AND THEN, README.MD + GIT
