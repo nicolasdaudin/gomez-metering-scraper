@@ -1,4 +1,5 @@
 import { Twilio } from 'twilio';
+import { LOCATIONS_FROM_ID } from '../dataset/heaterLocations';
 import { Measure } from '../reader/Measure';
 import { Report } from '../report/Report';
 
@@ -15,7 +16,7 @@ export class WhatsappNotifier {
 
     const client = new Twilio(accountSid, authToken);
 
-    const content = Report.build(data.slice(0, 7));
+    const content = Report.build(data.slice(0, 7), LOCATIONS_FROM_ID);
 
     const message = await client.messages.create({
       body: content,

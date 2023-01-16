@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import { Measure } from '../reader/Measure';
 
 /*
@@ -11,33 +12,14 @@ import { Measure } from '../reader/Measure';
 
 */
 
-const locationsFromId = [
-  { id: 30796099, name: 'Baño pequeño' },
-  {
-    id: 30796098,
-    name: 'Baño grande',
-  },
-  {
-    id: 30254638,
-    name: 'Habitación Nico',
-  },
-  {
-    id: 30254661,
-    name: 'Habitación Amelia',
-  },
-  {
-    id: 30254635,
-    name: 'Habitación Jime',
-  },
-  {
-    id: 30254633,
-    name: 'Salón',
-  },
-  { id: 30254659, name: 'Dormitorio principal' },
-];
-
 export class Report {
-  static build(data: Measure[]): string {
+  static build(
+    data: Measure[],
+    locations: {
+      id: number;
+      name: string;
+    }[]
+  ): string {
     console.log('nb of measures', data.length);
     const measureReport = data
       .map((measure) => {
@@ -46,7 +28,7 @@ export class Report {
           measure.deviceSerialNumber,
           measure.consumption
         );
-        const location = locationsFromId.find(
+        const location = locations.find(
           (location) => location.id === measure.deviceSerialNumber
         );
 
@@ -59,8 +41,12 @@ export class Report {
       0
     );
 
-    return `Tu consumo ayer ha sido de:
-    \n${measureReport}    
-    \nTu consumo total ha sido de ${totalConsumption}`;
+    const date = data[0].measureDate
+      .setLocale('es')
+      .toLocaleString(DateTime.DATE_FULL);
+
+    return `Tu consumo para el día ${date} ha sido de : 
+\n${measureReport}
+\nTu consumo total ha sido de ${totalConsumption}`;
   }
 }
