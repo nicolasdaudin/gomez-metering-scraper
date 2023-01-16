@@ -2,7 +2,7 @@ import { GomezReader } from './GomezReader';
 import { Measure } from './Measure';
 import { DateTime, Interval } from 'luxon';
 
-describe('Gomez Reader', () => {
+describe.skip('Gomez Reader - Integration tests', () => {
   jest.setTimeout(10000);
 
   describe('Test setup', () => {
@@ -12,7 +12,7 @@ describe('Gomez Reader', () => {
     });
   });
 
-  describe.skip('Login', () => {
+  describe('Login', () => {
     let reader: GomezReader | undefined = undefined;
     afterEach(() => {
       if (reader) reader.closeBrowser();
