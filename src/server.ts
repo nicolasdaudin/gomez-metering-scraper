@@ -3,6 +3,7 @@ import { GomezReader } from './reader/GomezReader';
 
 import dotenv from 'dotenv';
 import { WhatsappNotifier } from './notifications/WhatsappNotifier';
+import { Measure } from './reader/Measure';
 dotenv.config();
 
 const app = express();
@@ -29,17 +30,23 @@ app.get('/fetchGomez', async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const reader = new GomezReader(
+  const measures = await fetchGomez(
     process.env.GOMEZ_USER,
-    process.env.GOMEZ_PASSWORD
+    process.env.GOMEZ_PASSWORD,
+    '+34633142220'
   );
-  const measures = await reader.read();
-
-  const notifier = new WhatsappNotifier();
-  notifier.notify('+34633142220', measures);
 
   res.status(200).json({
     data: measures,
     message: 'Succesfully fetched data from Gomez',
   });
 });
+
+async function fetchGomez(user: string, password: string, phonenumber: string) {
+  const reader = new GomezReader(user, password);
+  const measures = await reader.read();
+
+  const notifier = new WhatsappNotifier();
+  notifier.notify(phonenumber, measures);
+  return measures;
+}
