@@ -21,7 +21,7 @@ export class GomezReader implements Reader<GomezMeasure> {
   async login() {
     try {
       this._browser = await puppeteer.launch({
-        headless: false,
+        headless: true,
         args: ['--no-sandbox'],
       });
       const page = await this._browser.newPage();
