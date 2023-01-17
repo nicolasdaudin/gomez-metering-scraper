@@ -4,6 +4,7 @@ import { WhatsappNotifier } from './notifications/WhatsappNotifier';
 import { CronJob } from 'cron';
 
 import dotenv from 'dotenv';
+import { DateTime } from 'luxon';
 dotenv.config();
 
 const app = express();
@@ -14,6 +15,9 @@ app.get('/', (req: Request, res: Response): void => {
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
+  console.info(
+    `App started at : ${DateTime.now().setZone('Europe/Madrid').toISO()}`
+  );
   console.info(`App running on listening on port ${port}`);
   console.info('###');
   console.info('### Welcome to app Gomez Metering Scraper');
@@ -55,7 +59,10 @@ async function fetchGomez(user: string, password: string, phonenumber: string) {
 new CronJob(
   '0 5/5 * * * *',
   async () => {
-    console.log('CRON SCHEDULED at ', new Date().toString());
+    console.log(
+      'CRON SCHEDULED at ',
+      DateTime.now().setZone('Europe/Madrid').toISO()
+    );
     if (process.env.TRIGGER_CRON && process.env.TRIGGER_CRON === 'true') {
       if (process.env.GOMEZ_USER && process.env.GOMEZ_PASSWORD) {
         console.log('CRON about to call fetchGomez');

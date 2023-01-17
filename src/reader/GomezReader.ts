@@ -22,6 +22,7 @@ export class GomezReader implements Reader<GomezMeasure> {
     try {
       this._browser = await puppeteer.launch({
         headless: false,
+        args: ['--no-sandbox'],
       });
       const page = await this._browser.newPage();
       await page.setViewport({ width: 1366, height: 768 });
