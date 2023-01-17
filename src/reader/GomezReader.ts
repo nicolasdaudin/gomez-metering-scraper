@@ -54,7 +54,10 @@ export class GomezReader implements Reader<GomezMeasure> {
       await this.login();
     }
     // console.log('lecturasDiarias visible');
-    if (!this._page) return [];
+    if (!this._page) {
+      this._browser?.close();
+      return [];
+    }
 
     await this._page.goto(
       'https://ov.gomezgroupmetering.com/lecturasAbonadoDiario'

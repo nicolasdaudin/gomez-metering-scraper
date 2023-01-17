@@ -4,9 +4,11 @@
   "description": "Webscraper for Gomez Group Metering consumption readings",
   "main": "server.js",
   "scripts": {
-    "start:build": "tsc -w",
-    "start:run": "nodemon build/server.js",
-    "start": "concurrently npm:start:*",
+    "start-dev:build": "tsc -w",
+    "start-dev:run": "nodemon build/server.js",
+    "start-dev": "concurrently npm:start-dev:*",
+    "start": "node build/server.js",
+    "postinstall": "tsc",
     "test": "jest --verbose --watchAll --detectOpenHandles"
   },
   "author": "",
@@ -32,5 +34,8 @@
     "luxon": "^3.2.1",
     "puppeteer": "^19.5.0",
     "twilio": "^3.84.1"
+  },
+  "engines": {
+    "node": "18.2.1"
   }
 }

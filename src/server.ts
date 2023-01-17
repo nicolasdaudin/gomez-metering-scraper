@@ -52,17 +52,24 @@ async function fetchGomez(user: string, password: string, phonenumber: string) {
 }
 
 new CronJob(
-  '*/5 * * * * *',
-  () => {
-    console.log('CRON START');
-    if (process.env.GOMEZ_USER && process.env.GOMEZ_PASSWORD) {
-      console.log('CRON about to call fetchGomez');
-      const measures = fetchGomez(
-        process.env.GOMEZ_USER,
-        process.env.GOMEZ_PASSWORD,
-        '+34633142220'
-      );
-      console.log('measures read from cron', measures);
+  '0 5/5 * * * *',
+  async () => {
+    console.log('CRON SCHEDULED at ', new Date().toString());
+    if (process.env.TRIGGER_CRON && process.env.TRIGGER_CRON === 'true') {
+      if (process.env.GOMEZ_USER && process.env.GOMEZ_PASSWORD) {
+        console.log('CRON about to call fetchGomez');
+        const measures = await fetchGomez(
+          process.env.GOMEZ_USER,
+          process.env.GOMEZ_PASSWORD,
+          '+34633142220'
+        );
+        console.log('CRON nb of measures read from cron', measures.length);
+        console.log(
+          `CRON measure[0]: deviceSerialNumber=${measures[0].deviceSerialNumber} measure=${measures[0].measure} consumption=${measures[0].consumption}`
+        );
+      }
+    } else {
+      console.log('CRON will NOT be triggered');
     }
   },
   null,
