@@ -1,7 +1,6 @@
 /.vscode
 /build
 /node_modules
-/screenshots
 .env
 /.cache
 .DS_Store

@@ -28,6 +28,9 @@ export class GomezReader implements Reader<GomezMeasure> {
       const page = await this._browser.newPage();
       await page.setViewport({ width: 1366, height: 768 });
       await page.goto('https://ov.gomezgroupmetering.com/preLogin');
+      console.log('current working directory', process.cwd());
+      console.log('path 1', path.join('', 'screenshots', 'login.png'));
+      console.log('path 2', path.join('./', 'screenshots', 'login.png'));
       await page.screenshot({
         path: path.join('', 'screenshots', 'login.png'),
       });
