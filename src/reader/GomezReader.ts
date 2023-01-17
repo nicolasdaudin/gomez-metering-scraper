@@ -3,6 +3,7 @@ import puppeteer, { Browser, Page } from 'puppeteer';
 import { GomezMeasure } from './GomezMeasure';
 import { Measure } from './Measure';
 import { Reader } from './Reader';
+import path from 'path';
 
 export class GomezReader implements Reader<GomezMeasure> {
   private _page: Page | undefined = undefined;
@@ -27,7 +28,9 @@ export class GomezReader implements Reader<GomezMeasure> {
       const page = await this._browser.newPage();
       await page.setViewport({ width: 1366, height: 768 });
       await page.goto('https://ov.gomezgroupmetering.com/preLogin');
-      await page.screenshot({ path: './screenshots/login.png' });
+      await page.screenshot({
+        path: path.join('', 'screenshots', 'login.png'),
+      });
 
       await page.type('.form-control[name=user]', this.user);
       await page.type('.form-control[name=password]', this.password);
@@ -64,7 +67,9 @@ export class GomezReader implements Reader<GomezMeasure> {
       'https://ov.gomezgroupmetering.com/lecturasAbonadoDiario'
     );
 
-    await this._page.screenshot({ path: './screenshots/consumo.png' });
+    await this._page.screenshot({
+      path: path.join('', 'screenshots', 'consumo.png'),
+    });
 
     const measuresTableFirstMeasureSelector =
       '#tableLecturas > tbody > tr:nth-child(1) > td:nth-child(6)';
