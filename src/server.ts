@@ -12,11 +12,12 @@ app.get('/', (req: Request, res: Response): void => {
   res.send('Hello Gomez Metering Scraper');
 });
 
-app.listen(3000, () => {
-  console.log('listening on port 3000');
-  console.log('###');
-  console.log('### Welcome to app Gomez Metering Scraper');
-  console.log('###');
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.info(`App running on listening on port ${port}`);
+  console.info('###');
+  console.info('### Welcome to app Gomez Metering Scraper');
+  console.info('###');
 });
 
 app.get('/fetchGomez', async (req: Request, res: Response): Promise<void> => {
