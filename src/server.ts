@@ -1,9 +1,9 @@
 import express, { Request, Response } from 'express';
 import { GomezReader } from './reader/GomezReader';
+import { WhatsappNotifier } from './notifications/WhatsappNotifier';
+import { CronJob } from 'cron';
 
 import dotenv from 'dotenv';
-import { WhatsappNotifier } from './notifications/WhatsappNotifier';
-import { Measure } from './reader/Measure';
 dotenv.config();
 
 const app = express();
@@ -47,6 +47,24 @@ async function fetchGomez(user: string, password: string, phonenumber: string) {
   const measures = await reader.read();
 
   const notifier = new WhatsappNotifier();
-  notifier.notify(phonenumber, measures);
+  await notifier.notify(phonenumber, measures);
   return measures;
 }
+
+new CronJob(
+  '*/5 * * * * *',
+  () => {
+    console.log('CRON START');
+    if (process.env.GOMEZ_USER && process.env.GOMEZ_PASSWORD) {
+      console.log('CRON about to call fetchGomez');
+      const measures = fetchGomez(
+        process.env.GOMEZ_USER,
+        process.env.GOMEZ_PASSWORD,
+        '+34633142220'
+      );
+      console.log('measures read from cron', measures);
+    }
+  },
+  null,
+  true
+);

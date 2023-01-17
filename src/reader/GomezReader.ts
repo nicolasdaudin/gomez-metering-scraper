@@ -20,7 +20,9 @@ export class GomezReader implements Reader<GomezMeasure> {
 
   async login() {
     try {
-      this._browser = await puppeteer.launch();
+      this._browser = await puppeteer.launch({
+        headless: false,
+      });
       const page = await this._browser.newPage();
       await page.setViewport({ width: 1366, height: 768 });
       await page.goto('https://ov.gomezgroupmetering.com/preLogin');
