@@ -57,9 +57,9 @@ async function fetchGomez(user: string, password: string, phonenumber: string) {
 }
 
 const cronJob = new CronJob(
-  //'0 5/5 * * * *', // each 5 minutes
+  '0 5/5 * * * *', // each 5 minutes
   // '0 */1 * * * *', // each 1 minute
-  '0 0 */1 * * *', // each hour
+  // '0 0 */1 * * *', // each hour
   async () => {
     console.log(
       'CRON JOB starting at ',
