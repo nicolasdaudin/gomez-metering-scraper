@@ -75,7 +75,13 @@ const cronJob = new CronJob(
         );
         console.log('CRON nb of measures read from cron', measures.length);
         console.log(
-          `CRON measure[0]: deviceSerialNumber=${measures[0].deviceSerialNumber} measure=${measures[0].measure} consumption=${measures[0].consumption}`
+          `CRON measure[0]: deviceSerialNumber=${
+            measures[0].deviceSerialNumber
+          } measure=${measures[0].measure} consumption=${
+            measures[0].consumption
+          } measureDate=${measures[0].measureDate
+            .setZone('Europe/Madrid')
+            .toISO()}`
         );
       }
     } else {
