@@ -24,7 +24,7 @@ export class PlaywrightGomezReader implements Reader<GomezMeasure> {
     try {
       this._browser = await firefox.launch({
         headless: true,
-        // args: ['--no-sandbox'],
+        args: ['--no-sandbox'],
       });
       const context = await this._browser.newContext();
       const page = await context.newPage();
