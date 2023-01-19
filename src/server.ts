@@ -1,10 +1,10 @@
 import express, { Request, Response } from 'express';
-import { GomezReader } from './reader/GomezReader';
 import { WhatsappNotifier } from './notifications/WhatsappNotifier';
 import { CronJob } from 'cron';
 
 import dotenv from 'dotenv';
 import { DateTime } from 'luxon';
+import { PlaywrightGomezReader } from './reader/PlaywrightGomezReader';
 dotenv.config();
 
 const app = express();
@@ -48,7 +48,7 @@ app.get('/fetchGomez', async (req: Request, res: Response): Promise<void> => {
 });
 
 async function fetchGomez(user: string, password: string, phonenumber: string) {
-  const reader = new GomezReader(user, password);
+  const reader = new PlaywrightGomezReader(user, password);
   const measures = await reader.read();
 
   const notifier = new WhatsappNotifier();
@@ -56,11 +56,13 @@ async function fetchGomez(user: string, password: string, phonenumber: string) {
   return measures;
 }
 
-new CronJob(
-  '0 5/5 * * * *',
+const cronJob = new CronJob(
+  //'0 5/5 * * * *', // each 5 minutes
+  // '0 */1 * * * *', // each 1 minute
+  '0 0 */1 * * *', // each hour
   async () => {
     console.log(
-      'CRON SCHEDULED at ',
+      'CRON JOB starting at ',
       DateTime.now().setZone('Europe/Madrid').toISO()
     );
     if (process.env.TRIGGER_CRON && process.env.TRIGGER_CRON === 'true') {
@@ -77,9 +79,21 @@ new CronJob(
         );
       }
     } else {
-      console.log('CRON will NOT be triggered');
+      console.log('CRON will do NOTHING');
     }
+    console.log(
+      'CRON will NEXT execute at:',
+      cronJob.nextDate().setZone('Europe/Madrid').toISO()
+    );
   },
   null,
   true
 );
+// console.log('Next CRON schedules:', cronJob.nextDates(1));
+const nextCronDates = cronJob.nextDates(5) as DateTime[];
+nextCronDates.forEach((jobdate, i) => {
+  console.log(
+    `CRON #${i + 1} scheduled at : ${jobdate.setZone('Europe/Madrid').toISO()}`
+  );
+});
+// console.log('Next CRON schedules:', cronJob.nextDates(4));

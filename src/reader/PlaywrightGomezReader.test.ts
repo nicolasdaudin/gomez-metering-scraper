@@ -1,8 +1,8 @@
-import { GomezReader } from './GomezReader';
+import { PlaywrightGomezReader } from './PlaywrightGomezReader';
 import { Measure } from './Measure';
 import { DateTime, Interval } from 'luxon';
 
-describe.skip('Gomez Reader - Integration tests', () => {
+describe('Playwright Gomez Reader - Integration tests', () => {
   jest.setTimeout(10000);
 
   describe('Test setup', () => {
@@ -13,23 +13,22 @@ describe.skip('Gomez Reader - Integration tests', () => {
   });
 
   describe('Login', () => {
-    let reader: GomezReader | undefined = undefined;
-    afterEach(() => {
-      if (reader) reader.closeBrowser();
+    let reader: PlaywrightGomezReader | undefined = undefined;
+    afterEach(async () => {
+      if (reader) await reader.closeBrowserAndContext();
     });
     test('scraper logs in correctly to remote page', async () => {
-      reader = new GomezReader(
+      reader = new PlaywrightGomezReader(
         process.env.GOMEZ_USER as string,
         process.env.GOMEZ_PASSWORD as string
       );
-      expect.assertions(1);
       await reader.login();
       expect(reader.getBrowserPage()).not.toBeUndefined();
     });
     test('scraper throws error if something goes wrong', async () => {
       const FAKE_NAME = 'fakenamexyz';
       const FAKE_PASSWORD = 'fakepasswordxyz';
-      reader = new GomezReader(FAKE_NAME, FAKE_PASSWORD);
+      reader = new PlaywrightGomezReader(FAKE_NAME, FAKE_PASSWORD);
       expect.assertions(1);
       try {
         await reader.login();
@@ -45,12 +44,12 @@ describe.skip('Gomez Reader - Integration tests', () => {
   });
 
   describe('Reading measures', () => {
-    let reader: GomezReader | undefined = undefined;
-    afterEach(() => {
-      if (reader) reader.closeBrowser();
+    let reader: PlaywrightGomezReader | undefined = undefined;
+    afterEach(async () => {
+      if (reader) await reader.closeBrowserAndContext();
     });
     test('Reads correctly data from today or yesterday', async () => {
-      reader = new GomezReader(
+      reader = new PlaywrightGomezReader(
         process.env.GOMEZ_USER as string,
         process.env.GOMEZ_PASSWORD as string
       );
@@ -68,7 +67,6 @@ describe.skip('Gomez Reader - Integration tests', () => {
         measureDate: DateTime
       ): boolean => {
         const interval = Interval.fromDateTimes(measureDate, today);
-        console.log(measureDate.toString(), today.toString());
         return interval.count('days') <= 2;
       };
 
