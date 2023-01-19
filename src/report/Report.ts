@@ -45,7 +45,10 @@ export class Report {
       .setLocale('es')
       .toLocaleString(DateTime.DATE_FULL);
 
-    return `Tu consumo para el día ${date} ha sido de : 
+    const env =
+      process.env.NODE_ENV === 'production' ? 'production' : 'development';
+
+    return `(${env}) Tu consumo para el día ${date} ha sido de : 
 \n${measureReport}
 \nTu consumo total ha sido de ${totalConsumption}`;
   }
