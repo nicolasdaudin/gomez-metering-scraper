@@ -1,5 +1,5 @@
 import { Twilio } from 'twilio';
-import { LOCATIONS_FROM_ID } from '../dataset/heaterLocations';
+import { LOCATIONS_FROM_ID } from '../../dataset/heaterLocations';
 import { IMeasure } from '../reader/IMeasure';
 import { Report } from '../report/Report';
 
