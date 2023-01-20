@@ -1,13 +1,15 @@
 import express, { Request, Response } from 'express';
-import { WhatsappNotifier } from './notifications/WhatsappNotifier';
+import { WhatsappNotifier } from './service/notifications/WhatsappNotifier';
 
 import { DateTime } from 'luxon';
-import { PlaywrightGomezReader } from './reader/PlaywrightGomezReader';
+import { PlaywrightGomezReader } from './service/reader/PlaywrightGomezReader';
 
 import dotenv from 'dotenv';
 dotenv.config();
 
 import './db';
+import Device from './model/Device';
+import Measure from './model/Measure';
 
 const app = express();
 
@@ -24,6 +26,24 @@ app.listen(port, () => {
   console.info('###');
   console.info('### Welcome to app Gomez Metering Scraper');
   console.info('###');
+});
+
+app.get('/testdb', async (req, res) => {
+  const device = await Device.create({
+    serialNumber: 343434,
+    location: 'test',
+  });
+  const measure = await Measure.create({
+    device: device,
+    consumption: 3,
+    measure: 333,
+    measureDate: DateTime.now().minus({ days: 1 }),
+  });
+
+  res.status(200).json({
+    data: { device, measure },
+    message: 'Succesfully created device and measure',
+  });
 });
 
 app.get('/fetchGomez', async (req: Request, res: Response): Promise<void> => {
