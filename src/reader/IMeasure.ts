@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 
-export interface Measure {
+export interface IMeasure {
   deviceSerialNumber: number;
   measureDate: DateTime;
   measure: number;

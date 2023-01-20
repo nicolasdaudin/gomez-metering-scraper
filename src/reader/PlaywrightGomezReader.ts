@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Browser, BrowserContext, firefox, Page } from 'playwright';
 import { GomezMeasure } from './GomezMeasure';
-import { Measure } from './Measure';
+import { IMeasure } from './IMeasure';
 import { Reader } from './Reader';
 
 export class PlaywrightGomezReader implements Reader<GomezMeasure> {
@@ -113,7 +113,7 @@ export class PlaywrightGomezReader implements Reader<GomezMeasure> {
           consumption,
         });
       }
-    ) as Measure[];
+    ) as IMeasure[];
 
     // for some reasons, evaluateAll above inverts the order of the rows
     // in the web page the rows are sorted by descending date, but the array we get has

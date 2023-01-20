@@ -1,5 +1,5 @@
 import { PlaywrightGomezReader } from './PlaywrightGomezReader';
-import { Measure } from './Measure';
+import { IMeasure } from './IMeasure';
 import { DateTime, Interval } from 'luxon';
 
 describe('Playwright Gomez Reader - Integration tests', () => {
@@ -55,7 +55,7 @@ describe('Playwright Gomez Reader - Integration tests', () => {
       );
 
       const today = DateTime.now();
-      const measures: (Measure | null)[] = await reader.read();
+      const measures: (IMeasure | null)[] = await reader.read();
 
       expect(measures.length).toBeGreaterThan(0);
       expect(measures.every((measure) => measure != null)).toBe(true);

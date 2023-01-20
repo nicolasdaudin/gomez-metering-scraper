@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { Measure } from '../reader/Measure';
+import { IMeasure } from '../reader/IMeasure';
 
 /*
 
@@ -14,7 +14,7 @@ import { Measure } from '../reader/Measure';
 
 export class Report {
   static build(
-    data: Measure[],
+    data: IMeasure[],
     locations: {
       id: number;
       name: string;

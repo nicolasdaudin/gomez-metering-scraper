@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon';
-import { Measure } from './Measure';
+import { IMeasure } from './IMeasure';
 
-export class GomezMeasure implements Measure {
+export class GomezMeasure implements IMeasure {
   static fromString({
     deviceSerialNumber,
     measureDate,
@@ -12,7 +12,7 @@ export class GomezMeasure implements Measure {
     measureDate: string;
     measure: string;
     consumption: string;
-  }): Measure {
+  }): IMeasure {
     return new GomezMeasure(
       +deviceSerialNumber,
       DateTime.fromFormat(measureDate, `dd'/'MM'/'yyyy`), // parsing things like '11/01/2023' for 11 January 2023
