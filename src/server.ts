@@ -1,10 +1,13 @@
 import express, { Request, Response } from 'express';
 import { WhatsappNotifier } from './notifications/WhatsappNotifier';
 
-import dotenv from 'dotenv';
 import { DateTime } from 'luxon';
 import { PlaywrightGomezReader } from './reader/PlaywrightGomezReader';
+
+import dotenv from 'dotenv';
 dotenv.config();
+
+import './db';
 
 const app = express();
 
