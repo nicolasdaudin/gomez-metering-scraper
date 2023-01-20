@@ -1,6 +1,5 @@
 import express, { Request, Response } from 'express';
 import { WhatsappNotifier } from './notifications/WhatsappNotifier';
-import { CronJob } from 'cron';
 
 import dotenv from 'dotenv';
 import { DateTime } from 'luxon';
@@ -55,51 +54,3 @@ async function fetchGomez(user: string, password: string, phonenumber: string) {
   await notifier.notify(phonenumber, measures);
   return measures;
 }
-
-const cronJob = new CronJob(
-  // '0 5/5 * * * *', // each 5 minutes
-  // '0 */1 * * * *', // each 1 minute
-  '0 0 */1 * * *', // each hour
-  async () => {
-    console.log(
-      'CRON JOB starting at ',
-      DateTime.now().setZone('Europe/Madrid').toISO()
-    );
-    if (process.env.TRIGGER_CRON && process.env.TRIGGER_CRON === 'true') {
-      if (process.env.GOMEZ_USER && process.env.GOMEZ_PASSWORD) {
-        console.log('CRON about to call fetchGomez');
-        const measures = await fetchGomez(
-          process.env.GOMEZ_USER,
-          process.env.GOMEZ_PASSWORD,
-          '+34633142220'
-        );
-        console.log('CRON nb of measures read from cron', measures.length);
-        console.log(
-          `CRON measure[0]: deviceSerialNumber=${
-            measures[0].deviceSerialNumber
-          } measure=${measures[0].measure} consumption=${
-            measures[0].consumption
-          } measureDate=${measures[0].measureDate
-            .setZone('Europe/Madrid')
-            .toISO()}`
-        );
-      }
-    } else {
-      console.log('CRON will do NOTHING');
-    }
-    console.log(
-      'CRON will NEXT execute at:',
-      cronJob.nextDate().setZone('Europe/Madrid').toISO()
-    );
-  },
-  null,
-  true
-);
-// console.log('Next CRON schedules:', cronJob.nextDates(1));
-const nextCronDates = cronJob.nextDates(5) as DateTime[];
-nextCronDates.forEach((jobdate, i) => {
-  console.log(
-    `CRON #${i + 1} scheduled at : ${jobdate.setZone('Europe/Madrid').toISO()}`
-  );
-});
-// console.log('Next CRON schedules:', cronJob.nextDates(4));
