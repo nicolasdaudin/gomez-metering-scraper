@@ -1,5 +1,5 @@
 import { PlaywrightGomezReader } from './PlaywrightGomezReader';
-import { IMeasure } from './IMeasure';
+import { IMeasure } from '../measure/IMeasure';
 import { DateTime, Interval } from 'luxon';
 
 describe('Playwright Gomez Reader - Integration tests', () => {

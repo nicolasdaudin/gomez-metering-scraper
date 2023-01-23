@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Browser, BrowserContext, firefox, Page } from 'playwright';
-import { GomezMeasure } from './GomezMeasure';
-import { IMeasure } from './IMeasure';
+import { GomezMeasure } from '../measure/GomezMeasure';
+import { IMeasure } from '../measure/IMeasure';
 import { Reader } from './Reader';
 
 export class PlaywrightGomezReader implements Reader<GomezMeasure> {

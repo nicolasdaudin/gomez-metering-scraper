@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { IMeasure } from '../reader/IMeasure';
+import { IMeasure } from '../measure/IMeasure';
 
 /*
 

@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { GomezMeasure } from '../reader/GomezMeasure';
+import { GomezMeasure } from '../measure/GomezMeasure';
 import { Report } from './Report';
 
 describe('Report builder - Unit tests', () => {
