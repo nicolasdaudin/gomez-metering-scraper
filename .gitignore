@@ -4,6 +4,4 @@
 .env
 /.cache
 .DS_Store
-/test-results/
-/playwright-report/
-/playwright/.cache/
+/src/mongodb-playgrounds

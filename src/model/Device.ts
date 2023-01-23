@@ -1,11 +1,24 @@
-import mongoose from 'mongoose';
+import { Model, Schema, model } from 'mongoose';
 
-const Schema = mongoose.Schema;
+interface IDevice {
+  serialNumber: number;
+  location: string;
+}
 
-const DeviceSchema = new Schema({
-  serialNumber: { type: Number, required: true },
+interface DeviceModel extends Model<IDevice> {
+  findBySerialNumber(serialNumber: number): IDevice;
+}
+
+const deviceSchema = new Schema<IDevice, DeviceModel>({
+  serialNumber: { type: Number, required: true, unique: true },
   location: { type: String, required: true },
 });
+deviceSchema.static(
+  'findBySerialNumber',
+  async function findBySerialNumber(serialNumber: number) {
+    return await this.findOne({ serialNumber });
+  }
+);
 
-const Device = mongoose.model('Device', DeviceSchema);
+const Device = model<IDevice, DeviceModel>('Device', deviceSchema);
 export default Device;

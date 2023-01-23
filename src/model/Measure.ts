@@ -1,16 +1,17 @@
-import mongoose from 'mongoose';
+import { Schema, model } from 'mongoose';
 
-const Schema = mongoose.Schema;
+const measureSchema = new Schema(
+  {
+    device: { type: Schema.Types.ObjectId, ref: 'Device', required: true },
+    measureDate: { type: Date, required: true },
+    measure: { type: Number, required: true },
+    consumption: { type: Number, required: true },
+  },
+  { timestamps: true }
+);
+measureSchema.index({ device: 1, measureDate: 1 }, { unique: true });
 
-const MeasureSchema = new Schema({
-  device: { type: Schema.Types.ObjectId, ref: 'Device', required: true },
-  measureDate: { type: Date, required: true },
-  measure: { type: Number, required: true },
-  consumption: { type: Number, required: true },
-  lastUpdated: { type: Date, default: Date.now },
-});
-
-const Measure = mongoose.model('Measure', MeasureSchema);
+const Measure = model('Measure', measureSchema);
 export default Measure;
 // - une collection measures pour les lectures du dispositif
 // 	- id_gomez_device : 39798902 (extrrait de gomez)

@@ -10,6 +10,7 @@ dotenv.config();
 import './db';
 import Device from './model/Device';
 import Measure from './model/Measure';
+import { MeasureStore } from './service/measure/MeasureStore';
 
 const app = express();
 
@@ -62,6 +63,8 @@ app.get('/fetchGomez', async (req: Request, res: Response): Promise<void> => {
     process.env.GOMEZ_PASSWORD,
     '+34633142220'
   );
+
+  await MeasureStore.save(measures.slice(0, 10));
 
   res.status(200).json({
     data: measures,
