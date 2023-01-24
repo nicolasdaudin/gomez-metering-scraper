@@ -1,5 +1,4 @@
 import express, { Request, Response } from 'express';
-import { WhatsappNotifier } from './service/notifications/WhatsappNotifier';
 
 import { DateTime } from 'luxon';
 import { PlaywrightGomezReader } from './service/reader/PlaywrightGomezReader';
@@ -11,6 +10,7 @@ import './db';
 import Device from './model/Device';
 import Measure from './model/Measure';
 import { MeasureStore } from './service/measure/MeasureStore';
+import { EmailNotifier } from './service/notifications/EmailNotifier';
 
 const app = express();
 
@@ -61,7 +61,7 @@ app.get('/fetchGomez', async (req: Request, res: Response): Promise<void> => {
   const measures = await fetchGomez(
     process.env.GOMEZ_USER,
     process.env.GOMEZ_PASSWORD,
-    '+34633142220'
+    'nicolas.daudin@gmail.com'
   );
 
   await MeasureStore.save(measures.slice(0, 10));
@@ -72,11 +72,14 @@ app.get('/fetchGomez', async (req: Request, res: Response): Promise<void> => {
   });
 });
 
-async function fetchGomez(user: string, password: string, phonenumber: string) {
+async function fetchGomez(user: string, password: string, email: string) {
   const reader = new PlaywrightGomezReader(user, password);
   const measures = await reader.read();
 
-  const notifier = new WhatsappNotifier();
-  await notifier.notify(phonenumber, measures);
+  // const notifier = new WhatsappNotifier();
+  // await notifier.notify(phonenumber, measures);
+
+  const notifier = new EmailNotifier();
+  await notifier.notify(email, measures);
   return measures;
 }

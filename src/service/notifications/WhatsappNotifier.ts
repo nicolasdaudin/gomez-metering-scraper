@@ -2,8 +2,9 @@ import { Twilio } from 'twilio';
 import { LOCATIONS_FROM_ID } from '../../dataset/heaterLocations';
 import { IMeasure } from '../measure/IMeasure';
 import { Report } from '../report/Report';
+import { Notifier } from './Notifier';
 
-export class WhatsappNotifier {
+export class WhatsappNotifier implements Notifier<IMeasure> {
   async notify(to: string, data: IMeasure[]): Promise<void> {
     if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
       console.error(
