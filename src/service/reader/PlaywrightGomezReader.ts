@@ -4,6 +4,13 @@ import { GomezMeasure } from '../measure/GomezMeasure';
 import { IMeasure } from '../measure/IMeasure';
 import { IReader } from './IReader';
 
+const NB_HEATERS = 7;
+
+/**
+ * On Gomez Metering page, default read is 10 rows (10 readings) and the last week
+ * We can use an option to display 50 or 100 or all the rows
+ * But it will be blocked to last week so we also need to ask for last year's reading
+ */
 export class PlaywrightGomezReader implements IReader<GomezMeasure> {
   private _page: Page | undefined;
   private _browser: Browser | undefined;
@@ -55,7 +62,9 @@ export class PlaywrightGomezReader implements IReader<GomezMeasure> {
     }
   }
 
-  async read(): Promise<GomezMeasure[]> {
+  async read(nbOfDaysToExtract: number): Promise<GomezMeasure[]> {
+    const NB_OF_ROWS_TO_EXTRACT = nbOfDaysToExtract * NB_HEATERS;
+
     if (!this._page) {
       console.log('first, we log in');
       await this.login();
@@ -71,11 +80,22 @@ export class PlaywrightGomezReader implements IReader<GomezMeasure> {
       'https://ov.gomezgroupmetering.com/lecturasAbonadoDiario'
     );
 
-    // select option 50 measures
-    // otherwise, measure rows won't be displayed in the page to scrape
-    await this._page
-      .getByRole('combobox', { name: 'Mostrar registros' })
-      .selectOption('50');
+    // if we want to extract 7 days or less, we just need to select the '50 rows' option
+    if (NB_OF_ROWS_TO_EXTRACT <= 50) {
+      // select option 50 measures
+      // otherwise, measure rows won't be displayed in the page to scrape
+      await this._page
+        .getByRole('combobox', { name: 'Mostrar registros' })
+        .selectOption('50');
+    } else {
+      // we only consider extracting everything from last year
+      // TODO: consider extract less than 30 days.
+      await this._page.locator('#reportrange i').first().click();
+      await this._page.getByText('Último año').click();
+      await this._page
+        .getByRole('combobox', { name: 'Mostrar registros' })
+        .selectOption('-1');
+    }
 
     const rowsLocator = await this._page
       .locator('#tableLecturas > tbody')
@@ -83,25 +103,30 @@ export class PlaywrightGomezReader implements IReader<GomezMeasure> {
 
     // actual scrape: for each row, we get the values in the cells we need
     const measuresAsStrings = await rowsLocator.evaluateAll(
-      (htmlRows: HTMLElement[]) =>
-        htmlRows.map((row) => {
-          const deviceSerialNumber = row
-            .querySelector('td:nth-child(3)')
-            ?.textContent?.trim();
-          const measureDate = row
-            .querySelector('td:nth-child(4)')
-            ?.textContent?.trim();
-          const measure = row
-            .querySelector('td:nth-child(6)')
-            ?.textContent?.trim();
-          const consumption = row
-            .querySelector('td:nth-child(7)')
-            ?.textContent?.trim();
+      (htmlRows: HTMLElement[], nbOfRowsToExtract: number) =>
+        htmlRows
+          .slice(htmlRows.length - nbOfRowsToExtract, htmlRows.length)
+          .map((row) => {
+            const deviceSerialNumber = row
+              .querySelector('td:nth-child(3)')
+              ?.textContent?.trim();
+            const measureDate = row
+              .querySelector('td:nth-child(4)')
+              ?.textContent?.trim();
+            const measure = row
+              .querySelector('td:nth-child(6)')
+              ?.textContent?.trim();
+            const consumption = row
+              .querySelector('td:nth-child(7)')
+              ?.textContent?.trim();
 
-          // we can't create a GomezMeasure object here, since we are in the context of the page we are scraping
-          return { deviceSerialNumber, measureDate, measure, consumption };
-        })
+            // we can't create a GomezMeasure object here, since we are in the context of the page we are scraping
+            return { deviceSerialNumber, measureDate, measure, consumption };
+          }),
+      NB_OF_ROWS_TO_EXTRACT
     );
+    console.log('scraper - nb of measures', measuresAsStrings.length);
+    console.log('scraper - last measure', measuresAsStrings[0]);
     const measures = measuresAsStrings.map(
       ({ deviceSerialNumber, measureDate, measure, consumption }) => {
         if (!deviceSerialNumber || !measureDate || !measure || !consumption)

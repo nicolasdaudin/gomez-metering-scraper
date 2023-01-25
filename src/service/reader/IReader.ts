@@ -1,5 +1,5 @@
 import { IMeasure } from '../measure/IMeasure';
 
 export interface IReader<T extends IMeasure> {
-  read(): Promise<T[]>;
+  read(days: number): Promise<T[]>;
 }
