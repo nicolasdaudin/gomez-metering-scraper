@@ -55,7 +55,7 @@ describe('Playwright Gomez Reader - Integration tests', () => {
       );
 
       const today = DateTime.now();
-      const measures: (IMeasure | null)[] = await reader.read();
+      const measures: (IMeasure | null)[] = await reader.read(1);
 
       expect(measures.length).toBeGreaterThan(0);
       expect(measures.every((measure) => measure != null)).toBe(true);
