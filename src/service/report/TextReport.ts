@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon';
 import { IMeasure } from '../measure/IMeasure';
+import { IReport } from './IReport';
 
 /*
 
@@ -12,23 +13,22 @@ import { IMeasure } from '../measure/IMeasure';
 
 */
 
-export class Report {
-  static build(
-    data: IMeasure[],
-    locations: {
-      id: number;
-      name: string;
-    }[]
-  ): string {
-    console.log('nb of measures', data.length);
-    const measureReport = data
+export class TextReport implements IReport<IMeasure> {
+  constructor(
+    public data: IMeasure[],
+    public locations: { id: number; name: string }[]
+  ) {}
+
+  build(): string {
+    console.log('nb of measures', this.data.length);
+    const measureReport = this.data
       .map((measure) => {
         console.log(
           'Building report for measure',
           measure.deviceSerialNumber,
           measure.consumption
         );
-        const location = locations.find(
+        const location = this.locations.find(
           (location) => location.id === measure.deviceSerialNumber
         );
 
@@ -36,19 +36,16 @@ export class Report {
       })
       .join('\n');
 
-    const totalConsumption = data.reduce(
+    const totalConsumption = this.data.reduce(
       (prev, curr) => (curr?.consumption || 0) + prev,
       0
     );
 
-    const date = data[0].measureDate
+    const date = this.data[0].measureDate
       .setLocale('es')
       .toLocaleString(DateTime.DATE_FULL);
 
-    const env =
-      process.env.NODE_ENV === 'production' ? 'production' : 'development';
-
-    return `(${env}) Tu consumo para el día ${date} ha sido de : 
+    return `Tu consumo para el día ${date} ha sido de : 
 \n${measureReport}
 \nTu consumo total ha sido de ${totalConsumption}`;
   }

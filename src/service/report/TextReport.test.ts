@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import { GomezMeasure } from '../measure/GomezMeasure';
-import { Report } from './Report';
+import { TextReport } from './TextReport';
 
 describe('Report builder - Unit tests', () => {
   const locations: { id: number; name: string }[] = [
@@ -24,7 +24,7 @@ Room 2 : 7
 
 Tu consumo total ha sido de 11`;
 
-    const report = Report.build(measures, locations);
+    const report = new TextReport(measures, locations).build();
 
     expect(report).toEqual(expectedString);
   });

@@ -1,7 +1,7 @@
 import { IMeasure } from '../measure/IMeasure';
 import { Notifier } from './Notifier';
 import nodemailer from 'nodemailer';
-import { Report } from '../report/Report';
+import { TextReport } from '../report/TextReport';
 import { LOCATIONS_FROM_ID } from '../../dataset/heaterLocations';
 import { DateTime } from 'luxon';
 
@@ -28,7 +28,10 @@ export class EmailNotifier implements Notifier<IMeasure> {
       .toLocaleString(DateTime.DATE_FULL);
     const subject = `Tu consumo para el día ${date}`;
 
-    const mailHtml = Report.build(data.slice(0, 7), LOCATIONS_FROM_ID);
+    const mailHtml = new TextReport(
+      data.slice(0, 7),
+      LOCATIONS_FROM_ID
+    ).build();
 
     const mailOptions = {
       from: '"Gomez Metering Scraper" <no-reply@gomez-metering-scraper.herokuapp.com>', // sender address

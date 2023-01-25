@@ -1,7 +1,7 @@
 import { Twilio } from 'twilio';
 import { LOCATIONS_FROM_ID } from '../../dataset/heaterLocations';
 import { IMeasure } from '../measure/IMeasure';
-import { Report } from '../report/Report';
+import { TextReport } from '../report/TextReport';
 import { Notifier } from './Notifier';
 
 export class WhatsappNotifier implements Notifier<IMeasure> {
@@ -17,10 +17,13 @@ export class WhatsappNotifier implements Notifier<IMeasure> {
 
     const client = new Twilio(accountSid, authToken);
 
-    const content = Report.build(data.slice(0, 7), LOCATIONS_FROM_ID);
+    const content = new TextReport(data.slice(0, 7), LOCATIONS_FROM_ID).build();
+
+    const env =
+      process.env.NODE_ENV === 'production' ? 'production' : 'development';
 
     const message = await client.messages.create({
-      body: content,
+      body: `(${env}) ${content}`,
       from: 'whatsapp:+14155238886',
       to: `whatsapp:${to}`,
     });
