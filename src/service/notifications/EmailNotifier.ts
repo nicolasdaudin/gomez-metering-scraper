@@ -1,12 +1,12 @@
 import { IMeasure } from '../measure/IMeasure';
 import { Notifier } from './Notifier';
 import nodemailer from 'nodemailer';
-import { TextReport } from '../report/TextReport';
-import { LOCATIONS_FROM_ID } from '../../dataset/heaterLocations';
 import { DateTime } from 'luxon';
+import { IReport } from '../report/IReport';
 
-export class EmailNotifier implements Notifier<IMeasure> {
-  async notify(to: string, data: IMeasure[]): Promise<void> {
+export class EmailNotifier implements Notifier<IReport<IMeasure>> {
+  constructor(public report: IReport<IMeasure>) {}
+  async notify(to: string, date: DateTime): Promise<void> {
     const transporter = nodemailer.createTransport({
       // service: 'gmail',
       // auth: {
@@ -23,15 +23,10 @@ export class EmailNotifier implements Notifier<IMeasure> {
       },
     });
 
-    const date = data[0].measureDate
-      .setLocale('es')
-      .toLocaleString(DateTime.DATE_FULL);
-    const subject = `Tu consumo para el día ${date}`;
+    const subjectDate = date.setLocale('es').toLocaleString(DateTime.DATE_FULL);
+    const subject = `Tu consumo para el día ${subjectDate}`;
 
-    const mailHtml = new TextReport(
-      data.slice(0, 7),
-      LOCATIONS_FROM_ID
-    ).build();
+    const mailHtml = this.report.build();
 
     const mailOptions = {
       from: '"Gomez Metering Scraper" <no-reply@gomez-metering-scraper.herokuapp.com>', // sender address

@@ -1,11 +1,12 @@
+import { DateTime } from 'luxon';
 import { Twilio } from 'twilio';
-import { LOCATIONS_FROM_ID } from '../../dataset/heaterLocations';
 import { IMeasure } from '../measure/IMeasure';
-import { TextReport } from '../report/TextReport';
+import { IReport } from '../report/IReport';
 import { Notifier } from './Notifier';
 
-export class WhatsappNotifier implements Notifier<IMeasure> {
-  async notify(to: string, data: IMeasure[]): Promise<void> {
+export class WhatsappNotifier implements Notifier<IReport<IMeasure>> {
+  constructor(public report: IReport<IMeasure>) {}
+  async notify(to: string, date: DateTime): Promise<void> {
     if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
       console.error(
         'Twilio credentials credentials missing from environment variables, please init TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN'
@@ -17,7 +18,7 @@ export class WhatsappNotifier implements Notifier<IMeasure> {
 
     const client = new Twilio(accountSid, authToken);
 
-    const content = new TextReport(data.slice(0, 7), LOCATIONS_FROM_ID).build();
+    const content = this.report.build();
 
     const env =
       process.env.NODE_ENV === 'production' ? 'production' : 'development';

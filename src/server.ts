@@ -3,6 +3,8 @@ import express, { Request, Response } from 'express';
 import { DateTime } from 'luxon';
 import { PlaywrightGomezReader } from './service/reader/PlaywrightGomezReader';
 
+import { LOCATIONS_FROM_ID } from './dataset/heaterLocations';
+
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -11,6 +13,7 @@ import Device from './model/Device';
 import Measure from './model/Measure';
 import { MeasureStore } from './service/measure/MeasureStore';
 import { EmailNotifier } from './service/notifications/EmailNotifier';
+import { TextReport } from './service/report/TextReport';
 
 const app = express();
 
@@ -79,7 +82,9 @@ async function fetchGomez(user: string, password: string, email: string) {
   // const notifier = new WhatsappNotifier();
   // await notifier.notify(phonenumber, measures);
 
-  const notifier = new EmailNotifier();
-  await notifier.notify(email, measures);
+  const notifier = new EmailNotifier(
+    new TextReport(measures.slice(0, 7), LOCATIONS_FROM_ID)
+  );
+  await notifier.notify(email, measures[0].measureDate);
   return measures;
 }
