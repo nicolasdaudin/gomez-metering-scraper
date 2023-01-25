@@ -1,33 +1,55 @@
+import { MongoBulkWriteError } from 'mongodb';
 import Device from '../../model/Device';
 import Measure from '../../model/Measure';
 import { GomezMeasure } from './GomezMeasure';
 
 export class MeasureStore {
   static async save(measures: GomezMeasure[]): Promise<void> {
-    for (const measure of measures) {
-      const device = await Device.findBySerialNumber(
-        measure.deviceSerialNumber
-      );
-
-      // only inserts if the measure does not exist yet
-      // measure do not change on the remote Gomez website so no need to scrap them again.
-      const similar = await Measure.findOne({
-        device,
-        measureDate: measure.measureDate,
-      });
-      if (similar) {
-        console.log(
-          `DB: Measure already exists: device ${device.location}, date : ${measure.measureDate}`
+    // prepare docs
+    const docs = await Promise.all(
+      measures.map(async (measure) => {
+        const device = await Device.findBySerialNumber(
+          measure.deviceSerialNumber
         );
-      } else {
-        const doc = await Measure.create({
+
+        return {
           device,
           measureDate: measure.measureDate,
           measure: measure.measure,
           consumption: measure.consumption,
-        });
-        console.log(
-          `DB: Inserted new Measure with ${doc._id}, device ${device.location}, date : ${measure.measureDate}`
+        };
+      })
+    );
+
+    console.log('Nb of docs to insert', docs.length);
+
+    try {
+      const inserted = await Measure.insertMany(docs, { ordered: false });
+      console.log('Nb of docs ACTUALLY INSERTED: ', inserted.length);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      // an error is caught when using insertMany with options ordered=false
+      // when there are duplicated :
+      // other non-duplicated docs are correctly inserted but errors are reported at the end.
+
+      // for some reasons 'error instance of MongoBulkWriteError' does not work even if the error is a MongoBulkWriteError
+      // so we need to fake it and force it
+      if (error.name === 'MongoBulkWriteError') {
+        // if (error instanceof MongoServerError) {
+        // if (error instanceof MongoBulkWriteError) {
+        // if (error instanceof MongoBulkWriteError.constructor.prototype) {
+        // if (error?.constructor.name === 'MongoBulkWriteError') {
+        console.error(
+          `Error while inserting Measures : ${
+            (error as MongoBulkWriteError).result.getWriteErrors().length
+          } not inserted (probably duplicated) and ${
+            (error as MongoBulkWriteError).result.nInserted
+          } correctly inserted`
+        );
+      } else {
+        console.error(
+          'Unexpected Error while inserting Measures :',
+          error.message
         );
       }
     }
