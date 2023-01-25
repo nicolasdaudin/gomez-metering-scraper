@@ -46,8 +46,9 @@ app.get('/fetchGomez', async (req: Request, res: Response): Promise<void> => {
     process.env.GOMEZ_PASSWORD,
     'nicolas.daudin@gmail.com'
   );
+  console.log('nb of measures we got from fetchGomez', measures.length);
 
-  await MeasureStore.save(measures.slice(0, 10));
+  await MeasureStore.save(measures);
 
   res.status(200).json({
     data: measures,
@@ -55,9 +56,50 @@ app.get('/fetchGomez', async (req: Request, res: Response): Promise<void> => {
   });
 });
 
-async function fetchGomez(user: string, password: string, email: string) {
+interface NbOfDaysParam {
+  params: {
+    nbOfDaysToExtract: string;
+  };
+}
+
+app.get(
+  '/fetchGomez/historic/:nbOfDaysToExtract',
+  async (req: Request & NbOfDaysParam, res: Response): Promise<void> => {
+    console.log('Reading from Gomez....');
+    if (!process.env.GOMEZ_USER || !process.env.GOMEZ_PASSWORD) {
+      res.status(500).json({
+        data: [],
+        message:
+          'Gomez Metering credentials missing from environment variables, please init GOMEZ_USER and GOMEZ_PASSWORD',
+      });
+      return;
+    }
+
+    const measures = await fetchGomez(
+      process.env.GOMEZ_USER,
+      process.env.GOMEZ_PASSWORD,
+      'nicolas.daudin@gmail.com',
+      +req.params.nbOfDaysToExtract
+    );
+    console.log('nb of measures we got from fetchGomez', measures.length);
+
+    await MeasureStore.save(measures);
+
+    res.status(200).json({
+      data: measures,
+      message: 'Succesfully fetched data from Gomez',
+    });
+  }
+);
+
+async function fetchGomez(
+  user: string,
+  password: string,
+  email: string,
+  nbOfDaysToExtract = 1
+) {
   const reader = new PlaywrightGomezReader(user, password);
-  const measures = await reader.read();
+  const measures = await reader.read(nbOfDaysToExtract);
 
   // const notifier = new WhatsappNotifier();
   // await notifier.notify(phonenumber, measures);
