@@ -27,9 +27,10 @@ export class EmailNotifier implements INotifier<IReport<IMeasure>> {
     const subject = `Tu consumo para el día ${subjectDate}`;
 
     const mailHtml = this.report.build();
+    const env = process.env.NODE_ENV === 'production' ? 'PROD' : 'DEV';
 
     const mailOptions = {
-      from: '"Gomez Metering Scraper" <no-reply@gomez-metering-scraper.herokuapp.com>', // sender address
+      from: `"Gomez Metering Scraper (${env})" <no-reply@gomez-metering-scraper.herokuapp.com>`, // sender address
       to,
       subject,
       html: mailHtml, // html body
