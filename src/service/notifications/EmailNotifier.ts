@@ -1,10 +1,10 @@
 import { IMeasure } from '../measure/IMeasure';
-import { Notifier } from './Notifier';
+import { INotifier } from './INotifier';
 import nodemailer from 'nodemailer';
 import { DateTime } from 'luxon';
 import { IReport } from '../report/IReport';
 
-export class EmailNotifier implements Notifier<IReport<IMeasure>> {
+export class EmailNotifier implements INotifier<IReport<IMeasure>> {
   constructor(public report: IReport<IMeasure>) {}
   async notify(to: string, date: DateTime): Promise<void> {
     const transporter = nodemailer.createTransport({

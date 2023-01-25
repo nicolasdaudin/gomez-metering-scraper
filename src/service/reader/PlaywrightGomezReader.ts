@@ -2,9 +2,9 @@
 import { Browser, BrowserContext, firefox, Page } from 'playwright';
 import { GomezMeasure } from '../measure/GomezMeasure';
 import { IMeasure } from '../measure/IMeasure';
-import { Reader } from './Reader';
+import { IReader } from './IReader';
 
-export class PlaywrightGomezReader implements Reader<GomezMeasure> {
+export class PlaywrightGomezReader implements IReader<GomezMeasure> {
   private _page: Page | undefined;
   private _browser: Browser | undefined;
   private _context: BrowserContext | undefined;

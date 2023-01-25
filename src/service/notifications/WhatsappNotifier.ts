@@ -2,10 +2,11 @@ import { DateTime } from 'luxon';
 import { Twilio } from 'twilio';
 import { IMeasure } from '../measure/IMeasure';
 import { IReport } from '../report/IReport';
-import { Notifier } from './Notifier';
+import { INotifier } from './INotifier';
 
-export class WhatsappNotifier implements Notifier<IReport<IMeasure>> {
+export class WhatsappNotifier implements INotifier<IReport<IMeasure>> {
   constructor(public report: IReport<IMeasure>) {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async notify(to: string, date: DateTime): Promise<void> {
     if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
       console.error(

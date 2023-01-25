@@ -1,5 +1,5 @@
 import { IMeasure } from '../measure/IMeasure';
 
-export interface Reader<T extends IMeasure> {
+export interface IReader<T extends IMeasure> {
   read(): Promise<T[]>;
 }
