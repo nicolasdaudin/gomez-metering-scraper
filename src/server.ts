@@ -14,6 +14,7 @@ import Measure from './model/Measure';
 import { MeasureStore } from './service/measure/MeasureStore';
 import { EmailNotifier } from './service/notifications/EmailNotifier';
 import { TextReport } from './service/report/TextReport';
+import { HtmlReport } from './service/report/HtmlReport';
 
 const app = express();
 
@@ -82,8 +83,12 @@ async function fetchGomez(user: string, password: string, email: string) {
   // const notifier = new WhatsappNotifier();
   // await notifier.notify(phonenumber, measures);
 
+  // const notifier = new EmailNotifier(
+  //   new TextReport(measures.slice(0, 7), LOCATIONS_FROM_ID)
+  // );
+
   const notifier = new EmailNotifier(
-    new TextReport(measures.slice(0, 7), LOCATIONS_FROM_ID)
+    new HtmlReport(measures.slice(0, 7), LOCATIONS_FROM_ID)
   );
   await notifier.notify(email, measures[0].measureDate);
   return measures;
