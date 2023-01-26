@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { DateTime } from 'luxon';
 import Measure from '../model/Measure';
-import { IMeasure } from '../service/measure/IMeasure';
 import {
   GomezAggregateByDay,
   GomezAggregateByMonth,
