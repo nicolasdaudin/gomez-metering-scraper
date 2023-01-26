@@ -12,6 +12,14 @@ import './db';
 import { MeasureStore } from './service/measure/MeasureStore';
 import { EmailNotifier } from './service/notifications/EmailNotifier';
 import { HtmlReport } from './service/report/HtmlReport';
+import Measure from './model/Measure';
+import {
+  GomezAggregateByDay,
+  GomezAggregateByMonth,
+  GomezAggregateByMonthAndDevice,
+  TypedResponse,
+} from './types/GomezResponse';
+import { TypedRequestParam } from './types/GomezRequest';
 
 const app = express();
 
@@ -56,16 +64,54 @@ app.get('/fetchGomez', async (req: Request, res: Response): Promise<void> => {
   });
 });
 
-interface NbOfDaysParam {
-  params: {
-    nbOfDaysToExtract: string;
-  };
-}
+app.get(
+  '/byMonthAndDevice',
+  async (
+    req: Request,
+    res: TypedResponse<GomezAggregateByMonthAndDevice>
+  ): Promise<void> => {
+    const data = await Measure.aggregateConsumptionByMonthAndDevice();
+
+    res.status(200).json({
+      data,
+    });
+  }
+);
+
+app.get(
+  '/byMonth',
+  async (
+    req: Request,
+    res: TypedResponse<GomezAggregateByMonth>
+  ): Promise<void> => {
+    const data = await Measure.aggregateConsumptionByMonth();
+    res.status(200).json({
+      data,
+    });
+  }
+);
+
+app.get(
+  '/byDay',
+  async (
+    req: Request,
+    res: TypedResponse<GomezAggregateByDay>
+  ): Promise<void> => {
+    const data = await Measure.aggregateConsumptionByDay();
+    res.status(200).json({
+      data,
+    });
+  }
+);
 
 app.get(
   '/fetchGomez/historic/:nbOfDaysToExtract',
-  async (req: Request & NbOfDaysParam, res: Response): Promise<void> => {
+  async (
+    req: TypedRequestParam<{ nbOfDaysToExtract: string }>,
+    res: Response
+  ): Promise<void> => {
     console.log('Reading from Gomez....');
+
     if (!process.env.GOMEZ_USER || !process.env.GOMEZ_PASSWORD) {
       res.status(500).json({
         data: [],
