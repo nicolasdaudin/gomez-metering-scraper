@@ -39,6 +39,7 @@
     "mongoose": "^6.8.4",
     "nodemailer": "^6.9.0",
     "playwright": "^1.29.2",
+    "pug": "^3.0.2",
     "twilio": "^3.84.1"
   },
   "engines": {

@@ -1,12 +1,6 @@
 import { Request, Response } from 'express';
 import { DateTime } from 'luxon';
 import Measure from '../model/Measure';
-import {
-  GomezAggregateByDay,
-  GomezAggregateByMonth,
-  GomezAggregateByMonthAndDevice,
-  TypedResponse,
-} from '../types/GomezResponse';
 
 export const getYesterdayMeasures = async (
   req: Request,
@@ -25,31 +19,40 @@ export const getYesterdayMeasures = async (
 
 export const getSummaryByMonthAndDevice = async (
   req: Request,
-  res: TypedResponse<GomezAggregateByMonthAndDevice>
+  // res: TypedResponse<GomezAggregateByMonthAndDevice>
+  res: Response
 ) => {
   const data = await Measure.aggregateConsumptionByMonthAndDevice();
-
-  res.status(200).json({
+  res.render('summary', {
+    title: 'Résumé par mois et appareil',
+    type: 'by-month-and-device',
     data,
   });
+  // res.status(200).json({
+  //   data,
+  // });
 };
 
 export const getSummaryByMonth = async (
   req: Request,
-  res: TypedResponse<GomezAggregateByMonth>
+  // res: TypedResponse<GomezAggregateByMonth>
+  res: Response
 ) => {
   const data = await Measure.aggregateConsumptionByMonth();
-  res.status(200).json({
-    data,
-  });
+  res.render('summary', { title: 'Résumé par mois', type: 'by-month', data });
+  // res.status(200).json({
+  //   data,
+  // });
 };
 
 export const getSummaryByDay = async (
   req: Request,
-  res: TypedResponse<GomezAggregateByDay>
+  // res: TypedResponse<GomezAggregateByDay>
+  res: Response
 ) => {
   const data = await Measure.aggregateConsumptionByDay();
-  res.status(200).json({
-    data,
-  });
+  res.render('summary', { title: 'Résumé par jour', type: 'by-day', data });
+  // res.status(200).json({
+  //   data,
+  // });
 };

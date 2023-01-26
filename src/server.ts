@@ -9,9 +9,11 @@ import './db';
 import { router as summaryRouter } from './router/SummaryRouter';
 import { router as extractRouter } from './router/ExtractRouter';
 const app = express();
-
+app.set('views', './src/views');
+app.set('view engine', 'pug');
 app.use('/summary', summaryRouter);
 app.use('/extract', extractRouter);
+app.locals.dateTime = DateTime;
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
