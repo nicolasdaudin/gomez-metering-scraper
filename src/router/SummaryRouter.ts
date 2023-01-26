@@ -1,47 +1,16 @@
-import { Request, Router } from 'express';
-import Measure from '../model/Measure';
+import { Router } from 'express';
 import {
-  GomezAggregateByDay,
-  GomezAggregateByMonth,
-  GomezAggregateByMonthAndDevice,
-  TypedResponse,
-} from '../types/GomezResponse';
+  getSummaryByDay,
+  getSummaryByMonth,
+  getSummaryByMonthAndDevice,
+  getYesterdayMeasures,
+} from '../controller/SummaryController';
 
 export const router = Router();
 
-const byMonthAndDevice = async (
-  req: Request,
-  res: TypedResponse<GomezAggregateByMonthAndDevice>
-): Promise<void> => {
-  const data = await Measure.aggregateConsumptionByMonthAndDevice();
+router.get('/yesterday', getYesterdayMeasures);
+router.get('/byMonth', getSummaryByMonth);
 
-  res.status(200).json({
-    data,
-  });
-};
+router.get('/byDay', getSummaryByDay);
 
-const byMonth = async (
-  req: Request,
-  res: TypedResponse<GomezAggregateByMonth>
-): Promise<void> => {
-  const data = await Measure.aggregateConsumptionByMonth();
-  res.status(200).json({
-    data,
-  });
-};
-
-const byDay = async (
-  req: Request,
-  res: TypedResponse<GomezAggregateByDay>
-): Promise<void> => {
-  const data = await Measure.aggregateConsumptionByDay();
-  res.status(200).json({
-    data,
-  });
-};
-
-router.get('/byMonth', byMonth);
-
-router.get('/byDay', byDay);
-
-router.get('/byMonthAndDevice', byMonthAndDevice);
+router.get('/byMonthAndDevice', getSummaryByMonthAndDevice);
