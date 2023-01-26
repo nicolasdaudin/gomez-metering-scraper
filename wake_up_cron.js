@@ -4,7 +4,7 @@ var http = require('http');
 var options = {
   // to be changed once we migrate to a proper domain name. It's normal to not use host with http or https
   host: 'gomez-metering-scraper.herokuapp.com',
-  path: '/fetchGomez',
+  path: '/extract/yesterday',
 };
 
 console.log('CRON WAKE UP START');
