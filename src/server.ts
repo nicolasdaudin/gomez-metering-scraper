@@ -12,14 +12,8 @@ import './db';
 import { MeasureStore } from './service/measure/MeasureStore';
 import { EmailNotifier } from './service/notifications/EmailNotifier';
 import { HtmlReport } from './service/report/HtmlReport';
-import Measure from './model/Measure';
-import {
-  GomezAggregateByDay,
-  GomezAggregateByMonth,
-  GomezAggregateByMonthAndDevice,
-  TypedResponse,
-} from './types/GomezResponse';
 import { TypedRequestParam } from './types/GomezRequest';
+import { router as summaryRouter } from './router/SummaryRouter';
 
 const app = express();
 
@@ -64,45 +58,7 @@ app.get('/fetchGomez', async (req: Request, res: Response): Promise<void> => {
   });
 });
 
-app.get(
-  '/byMonthAndDevice',
-  async (
-    req: Request,
-    res: TypedResponse<GomezAggregateByMonthAndDevice>
-  ): Promise<void> => {
-    const data = await Measure.aggregateConsumptionByMonthAndDevice();
-
-    res.status(200).json({
-      data,
-    });
-  }
-);
-
-app.get(
-  '/byMonth',
-  async (
-    req: Request,
-    res: TypedResponse<GomezAggregateByMonth>
-  ): Promise<void> => {
-    const data = await Measure.aggregateConsumptionByMonth();
-    res.status(200).json({
-      data,
-    });
-  }
-);
-
-app.get(
-  '/byDay',
-  async (
-    req: Request,
-    res: TypedResponse<GomezAggregateByDay>
-  ): Promise<void> => {
-    const data = await Measure.aggregateConsumptionByDay();
-    res.status(200).json({
-      data,
-    });
-  }
-);
+app.use('/summary', summaryRouter);
 
 app.get(
   '/fetchGomez/historic/:nbOfDaysToExtract',
