@@ -3,6 +3,7 @@ import { Model, Schema, model } from 'mongoose';
 interface IDevice {
   serialNumber: number;
   location: string;
+  coefficient: number;
 }
 
 interface DeviceModel extends Model<IDevice> {
@@ -12,6 +13,7 @@ interface DeviceModel extends Model<IDevice> {
 const deviceSchema = new Schema<IDevice, DeviceModel>({
   serialNumber: { type: Number, required: true, unique: true },
   location: { type: String, required: true },
+  coefficient: { type: Number, required: true },
 });
 deviceSchema.static(
   'findBySerialNumber',
