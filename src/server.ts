@@ -8,11 +8,15 @@ import './db';
 
 import { router as summaryRouter } from './router/SummaryRouter';
 import { router as extractRouter } from './router/ExtractRouter';
+import { router as energyCostRouter } from './router/EnergyCostRouter';
+
 const app = express();
 app.set('views', './src/views');
 app.set('view engine', 'pug');
+app.use(express.json({ limit: '10kb' })); // middleware to add body in the request data
 app.use('/summary', summaryRouter);
 app.use('/extract', extractRouter);
+app.use('/energycost', energyCostRouter);
 app.locals.dateTime = DateTime;
 
 const port = process.env.PORT || 3000;
