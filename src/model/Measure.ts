@@ -63,7 +63,7 @@ measureSchema.static(
         month: '$_id.date',
       })
       .project({ _id: 0, deviceObject: 0, serialNumber: 0 })
-      .sort('month location');
+      .sort('-month location');
 
     return result;
   }
@@ -73,18 +73,32 @@ measureSchema.static(
   'aggregateConsumptionByMonth',
   async function aggregateConsumptionByMonth() {
     const result = await Measure.aggregate()
+      .lookup({
+        from: 'devices',
+        localField: 'device',
+        foreignField: '_id',
+        as: 'deviceObject',
+      })
+      .replaceRoot({
+        $mergeObjects: [{ $arrayElemAt: ['$deviceObject', 0] }, '$$ROOT'],
+      })
       .group({
         _id: {
           date: { $dateToString: { format: '%Y-%m', date: '$measureDate' } },
         },
-        totalConsumption: { $sum: '$consumption' },
+        totalConsumption: {
+          $sum: '$consumption',
+        },
+        ponderedConsumption: {
+          $sum: { $multiply: ['$consumption', '$coefficient'] },
+        },
       })
-
       .addFields({
         month: '$_id.date',
       })
       .project({ _id: 0 })
-      .sort('month');
+      .sort('-month');
+    console.log(result);
 
     return result;
   }
