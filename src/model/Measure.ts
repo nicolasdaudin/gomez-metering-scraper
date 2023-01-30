@@ -13,11 +13,13 @@ interface MeasureModel extends Model<MeasurePOJO> {
   aggregateConsumptionByMonthAndDevice(): {
     month: string;
     totalConsumption: number;
+    weightedConsumption: number;
     location: string;
   }[];
 
   aggregateConsumptionByMonth(): {
     month: string;
+    weightedConsumption: number;
     totalConsumption: number;
   }[];
 
@@ -43,28 +45,39 @@ measureSchema.static(
   'aggregateConsumptionByMonthAndDevice',
   async function aggregateConsumptionByMonthAndDevice() {
     const result = await Measure.aggregate()
-      .group({
-        _id: {
-          date: { $dateToString: { format: '%Y-%m', date: '$measureDate' } },
-          device: '$device',
-        },
-        totalConsumption: { $sum: '$consumption' },
-      })
       .lookup({
         from: 'devices',
-        localField: '_id.device',
+        localField: 'device',
         foreignField: '_id',
         as: 'deviceObject',
       })
       .replaceRoot({
         $mergeObjects: [{ $arrayElemAt: ['$deviceObject', 0] }, '$$ROOT'],
       })
+      .group({
+        _id: {
+          date: { $dateToString: { format: '%Y-%m', date: '$measureDate' } },
+          location: '$location',
+        },
+        totalConsumption: {
+          $sum: '$consumption',
+        },
+        ponderedConsumption: {
+          $sum: { $multiply: ['$consumption', '$coefficient'] },
+        },
+      })
+
       .addFields({
         month: '$_id.date',
+        location: '$_id.location',
+        weightedConsumption: { $round: ['$ponderedConsumption', 2] },
       })
-      .project({ _id: 0, deviceObject: 0, serialNumber: 0 })
+      .project({
+        _id: 0,
+        ponderedConsumption: 0,
+      })
       .sort('-month location');
-
+    console.log(result);
     return result;
   }
 );
@@ -95,8 +108,9 @@ measureSchema.static(
       })
       .addFields({
         month: '$_id.date',
+        weightedConsumption: { $round: ['$ponderedConsumption', 2] },
       })
-      .project({ _id: 0 })
+      .project({ _id: 0, ponderedConsumption: 0 })
       .sort('-month');
     console.log(result);
 

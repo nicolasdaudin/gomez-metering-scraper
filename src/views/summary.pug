@@ -17,7 +17,7 @@ html
               tr 
                 td=dateTime.fromFormat(item.month,`yyyy'-'MM`,{locale:'fr'}).toLocaleString({month:'long',year:'numeric'})
                 td=item.totalConsumption
-                td=item.ponderedConsumption
+                td=item.weightedConsumption
         else if (type==='by-day')
           thead 
             tr
@@ -34,12 +34,14 @@ html
               th Mois
               th Appareil
               th Conso totale
+              th Conso pondérée
           tbody
             each item in data 
               tr 
                 td=dateTime.fromFormat(item.month,`yyyy'-'MM`,{locale:'fr'}).toLocaleString({month:'long',year:'numeric'})
                 td=item.location
-                td=item.totalConsumption                
+                td=item.totalConsumption 
+                td=item.weightedConsumption               
     #links
       h3 Autres options:
       ul 
