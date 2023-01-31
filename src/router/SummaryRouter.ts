@@ -3,12 +3,12 @@ import {
   getSummaryByDay,
   getSummaryByMonth,
   getSummaryByMonthAndDevice,
-  getYesterdayMeasures,
+  getYesterdaySummaryByDevice,
 } from '../controller/SummaryController';
 
 export const router = Router();
 
-router.get('/yesterday', getYesterdayMeasures);
+router.get('/yesterday', getYesterdaySummaryByDevice);
 router.get('/byMonth', getSummaryByMonth);
 
 router.get('/byDay', getSummaryByDay);

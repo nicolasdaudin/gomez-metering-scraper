@@ -25,17 +25,31 @@ interface MeasureModel extends Model<MeasurePOJO> {
     totalConsumption: number;
     weightedConsumption: number;
     location: string;
+    costForTheMonth: number;
   }[];
 
   aggregateConsumptionByMonth(): {
     month: string;
     weightedConsumption: number;
     totalConsumption: number;
+    costForTheMonth: number;
   }[];
 
   aggregateConsumptionByDay(): {
     day: string;
+    weightedConsumption: number;
     totalConsumption: number;
+    unitCost: number;
+    costForTheDay: number;
+  }[];
+
+  aggregateConsumptionByDayAndDevice(day: DateTime): {
+    day: string;
+    consumption: string;
+    location: string;
+    unitCost: number;
+    costForTheDay: number;
+    coefficient: number;
   }[];
 }
 
@@ -138,6 +152,94 @@ measureSchema.static(
     ]);
 
     console.log(result.slice(0, 50));
+    return result;
+  }
+);
+
+measureSchema.static(
+  'aggregateConsumptionByDayAndDevice',
+  async function aggregateConsumptionByDayAndDevice(day: DateTime) {
+    const result = await Measure.aggregate([
+      {
+        $match: {
+          measureDate: {
+            $gte: day,
+            $lte: day.plus({ days: 1 }),
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: 'devices',
+          localField: 'device',
+          foreignField: '_id',
+          as: 'deviceObject',
+        },
+      },
+      {
+        $addFields: {
+          thisDevice: {
+            $arrayElemAt: ['$deviceObject', 0],
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: 'energycosts',
+          pipeline: [
+            {
+              $sort: {
+                endDate: 1,
+              },
+            },
+          ],
+          as: 'allCosts',
+        },
+      },
+      {
+        $addFields: {
+          defaultCostObject: {
+            $last: '$allCosts',
+          },
+        },
+      },
+      {
+        $addFields: {
+          day: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$measureDate',
+            },
+          },
+          location: '$thisDevice.location',
+          unitCost: '$defaultCostObject.cost',
+          costForTheDay: {
+            $multiply: [
+              '$consumption',
+              '$defaultCostObject.cost',
+              '$thisDevice.coefficient',
+            ],
+          },
+          coefficient: '$thisDevice.coefficient',
+        },
+      },
+      {
+        $project: {
+          day: 1,
+          unitCost: 1,
+          costForTheDay: 1,
+          consumption: 1,
+          location: 1,
+          coefficient: 1,
+        },
+      },
+      {
+        $sort: {
+          location: 1,
+        },
+      },
+    ]);
+    console.log(result);
     return result;
   }
 );
