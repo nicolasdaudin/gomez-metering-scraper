@@ -1,6 +1,16 @@
 import { DateTime } from 'luxon';
 import { Schema, model, Model } from 'mongoose';
 import Device from './Device';
+import {
+  addCostFields,
+  addDateFields,
+  addLocationField,
+  lookupDefaultEnergyCost,
+  lookupDevices,
+  lookupDailyEnergyCost,
+  groupByDateAndDevice,
+  groupByMonthAndDevice,
+} from './MeasurePipeline';
 
 interface MeasurePOJO {
   device: typeof Device;
@@ -45,148 +55,15 @@ measureSchema.static(
   'aggregateConsumptionByMonthAndDevice',
   async function aggregateConsumptionByMonthAndDevice() {
     const result = await Measure.aggregate([
-      {
-        // first get the corresponding devices
-        $lookup: {
-          from: 'devices',
-          localField: 'device',
-          foreignField: '_id',
-          as: 'deviceObject',
-        },
-      },
-      {
-        $addFields: {
-          thisDevice: {
-            $arrayElemAt: ['$deviceObject', 0],
-          },
-        },
-      },
-      {
-        // aggregate by date (by day, not by month yet) and device
-        // and calculate total consumption
-        $group: {
-          _id: {
-            date: '$measureDate',
-            location: '$thisDevice.location',
-          },
-          totalConsumption: {
-            $sum: '$consumption',
-          },
-          weightedConsumption: {
-            $sum: {
-              $multiply: ['$consumption', '$thisDevice.coefficient'],
-            },
-          },
-        },
-      },
-      {
-        // look for the corresponding energy cost for each day
-        // energy costs are values stored between a begin and end date
-        $lookup: {
-          from: 'energycosts',
-          let: {
-            measureMeasureDate: '$_id.date',
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $lte: ['$beginDate', '$$measureMeasureDate'],
-                    },
-                    {
-                      $gte: ['$endDate', '$$measureMeasureDate'],
-                    },
-                  ],
-                },
-              },
-            },
-          ],
-          as: 'cost',
-        },
-      },
-      {
-        // we get the cost from the corresponding array we got at the previous step
-        $addFields: {
-          initCostObject: {
-            $arrayElemAt: ['$cost', 0],
-          },
-        },
-      },
-      {
-        // we again look at energy csots but this time we want to get all energy costs
-        // and retrieve the 'last' defined energy cost (last by date)
-        // the last will be the default energy costs when no energy costs are defined
-        $lookup: {
-          from: 'energycosts',
-          pipeline: [
-            {
-              $sort: {
-                endDate: 1,
-              },
-            },
-          ],
-          as: 'allCosts',
-        },
-      },
-      {
-        $addFields: {
-          defaultCostObject: {
-            $last: '$allCosts',
-          },
-        },
-      },
-      {
-        $addFields: {
-          day: {
-            $dateToString: {
-              format: '%Y-%m-%d',
-              date: '$_id.date',
-            },
-          },
-          isoDate: '$_id.date',
-          location: '$_id.location',
-          // compute values for unit costs and cost for the day
-          // using default values if needed
-          unitCost: {
-            $ifNull: ['$initCostObject.cost', '$defaultCostObject.cost'],
-          },
-          costForTheDay: {
-            $ifNull: [
-              {
-                $multiply: ['$weightedConsumption', '$initCostObject.cost'],
-              },
-              {
-                $multiply: ['$weightedConsumption', '$defaultCostObject.cost'],
-              },
-            ],
-          },
-        },
-      },
-      {
-        // finally group by month!
-        $group: {
-          _id: {
-            date: {
-              $dateToString: {
-                format: '%Y-%m',
-                date: '$isoDate',
-              },
-            },
-            location: '$location',
-          },
-          totalConsumption: {
-            $sum: '$totalConsumption',
-          },
-          weightedConsumption: {
-            $sum: '$weightedConsumption',
-          },
-          costForTheMonth: {
-            $sum: '$costForTheDay',
-          },
-        },
-      },
+      ...lookupDevices,
+      ...groupByDateAndDevice(true),
+      ...lookupDailyEnergyCost,
+      ...lookupDefaultEnergyCost,
+      ...addDateFields,
+      ...addCostFields,
+      ...addLocationField,
+      ...groupByMonthAndDevice(true),
+
       {
         $addFields: {
           month: '$_id.date',
@@ -209,148 +86,13 @@ measureSchema.static(
   'aggregateConsumptionByMonth',
   async function aggregateConsumptionByMonth() {
     const result = await Measure.aggregate([
-      {
-        // first get the corresponding devices
-        $lookup: {
-          from: 'devices',
-          localField: 'device',
-          foreignField: '_id',
-          as: 'deviceObject',
-        },
-      },
-      {
-        $addFields: {
-          thisDevice: {
-            $arrayElemAt: ['$deviceObject', 0],
-          },
-        },
-      },
-      {
-        // aggregate by date (by day, not by month yet)
-        // and calculate total consumptions
-
-        $group: {
-          _id: {
-            date: '$measureDate',
-          },
-          totalConsumption: {
-            $sum: '$consumption',
-          },
-          weightedConsumption: {
-            $sum: {
-              $multiply: ['$consumption', '$thisDevice.coefficient'],
-            },
-          },
-        },
-      },
-      {
-        // look for the corresponding energy cost for each day
-        // energy costs are values stored between a begin and end date
-        $lookup: {
-          from: 'energycosts',
-          let: {
-            measureMeasureDate: '$_id.date',
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $lte: ['$beginDate', '$$measureMeasureDate'],
-                    },
-                    {
-                      $gte: ['$endDate', '$$measureMeasureDate'],
-                    },
-                  ],
-                },
-              },
-            },
-          ],
-          as: 'cost',
-        },
-      },
-
-      {
-        // we get the cost from the corresponding array we got at the previous step
-        $addFields: {
-          initCostObject: {
-            $arrayElemAt: ['$cost', 0],
-          },
-        },
-      },
-      {
-        // we again look at energy csots but this time we want to get all energy costs
-        // and retrieve the 'last' defined energy cost (last by date)
-        // the last will be the default energy costs when no energy costs are defined
-        $lookup: {
-          from: 'energycosts',
-          pipeline: [
-            {
-              $sort: {
-                endDate: 1,
-              },
-            },
-          ],
-          as: 'allCosts',
-        },
-      },
-      {
-        $addFields: {
-          defaultCostObject: {
-            $last: '$allCosts',
-          },
-        },
-      },
-      {
-        $addFields: {
-          day: {
-            $dateToString: {
-              format: '%Y-%m-%d',
-              date: '$_id.date',
-            },
-          },
-          isoDate: '$_id.date',
-          // compute values for unit costs and cost for the day
-          // using default values if needed
-          unitCost: {
-            $ifNull: ['$initCostObject.cost', '$defaultCostObject.cost'],
-          },
-          costForTheDay: {
-            $ifNull: [
-              {
-                $multiply: ['$weightedConsumption', '$initCostObject.cost'],
-              },
-              {
-                $multiply: ['$weightedConsumption', '$defaultCostObject.cost'],
-              },
-            ],
-          },
-        },
-      },
-      {
-        // finally group by month!
-
-        $group: {
-          _id: {
-            date: {
-              $dateToString: {
-                format: '%Y-%m',
-                date: '$isoDate',
-              },
-            },
-          },
-          totalConsumption: {
-            $sum: '$totalConsumption',
-          },
-          weightedConsumption: {
-            $sum: '$weightedConsumption',
-          },
-          costForTheMonth: {
-            $sum: '$costForTheDay',
-          },
-        },
-      },
+      ...lookupDevices,
+      ...groupByDateAndDevice(),
+      ...lookupDailyEnergyCost,
+      ...lookupDefaultEnergyCost,
+      ...addDateFields,
+      ...addCostFields,
+      ...groupByMonthAndDevice(),
       {
         $addFields: {
           month: '$_id.date',
@@ -372,125 +114,12 @@ measureSchema.static(
   'aggregateConsumptionByDay',
   async function aggregateConsumptionByDay() {
     const result = await Measure.aggregate([
-      {
-        // first get the corresponding devices
-        $lookup: {
-          from: 'devices',
-          localField: 'device',
-          foreignField: '_id',
-          as: 'deviceObject',
-        },
-      },
-      {
-        $addFields: {
-          thisDevice: {
-            $arrayElemAt: ['$deviceObject', 0],
-          },
-        },
-      },
-      {
-        // aggregate by date (by day, not by month yet)
-        // and calculate total consumptions
-
-        $group: {
-          _id: {
-            date: '$measureDate',
-          },
-          totalConsumption: {
-            $sum: '$consumption',
-          },
-          weightedConsumption: {
-            $sum: {
-              $multiply: ['$consumption', '$thisDevice.coefficient'],
-            },
-          },
-        },
-      },
-      {
-        // look for the corresponding energy cost for each day
-        // energy costs are values stored between a begin and end date
-        $lookup: {
-          from: 'energycosts',
-          let: {
-            measureMeasureDate: '$_id.date',
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $lte: ['$beginDate', '$$measureMeasureDate'],
-                    },
-                    {
-                      $gte: ['$endDate', '$$measureMeasureDate'],
-                    },
-                  ],
-                },
-              },
-            },
-          ],
-          as: 'cost',
-        },
-      },
-      {
-        // we get the cost from the corresponding array we got at the previous step
-
-        $addFields: {
-          initCostObject: {
-            $arrayElemAt: ['$cost', 0],
-          },
-        },
-      },
-      {
-        // we again look at energy csots but this time we want to get all energy costs
-        // and retrieve the 'last' defined energy cost (last by date)
-        // the last will be the default energy costs when no energy costs are defined
-        $lookup: {
-          from: 'energycosts',
-          pipeline: [
-            {
-              $sort: {
-                endDate: 1,
-              },
-            },
-          ],
-          as: 'allCosts',
-        },
-      },
-      {
-        $addFields: {
-          defaultCostObject: {
-            $last: '$allCosts',
-          },
-        },
-      },
-      {
-        $addFields: {
-          day: {
-            $dateToString: {
-              format: '%Y-%m-%d',
-              date: '$_id.date',
-            },
-          },
-          isoDate: '$_id.date',
-          // compute values for unit costs and cost for the day
-          // using default values if needed
-          unitCost: {
-            $ifNull: ['$initCostObject.cost', '$defaultCostObject.cost'],
-          },
-          costForTheDay: {
-            $ifNull: [
-              {
-                $multiply: ['$weightedConsumption', '$initCostObject.cost'],
-              },
-              {
-                $multiply: ['$weightedConsumption', '$defaultCostObject.cost'],
-              },
-            ],
-          },
-        },
-      },
+      ...lookupDevices,
+      ...groupByDateAndDevice(),
+      ...lookupDailyEnergyCost,
+      ...lookupDefaultEnergyCost,
+      ...addDateFields,
+      ...addCostFields,
       {
         $project: {
           totalConsumption: 1,
