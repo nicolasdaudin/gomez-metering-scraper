@@ -9,39 +9,49 @@ html
         if (type==='by-month')                
           thead
             tr
-              th  Mois 
-              th  Conso totale
-              th  Conso pondérée
+              th Mois
+              th Coût mensuel 
+              th Conso totale
+              th Conso pondérée
           tbody    
             each item in data 
               tr 
-                td=dateTime.fromFormat(item.month,`yyyy'-'MM`,{locale:'fr'}).toLocaleString({month:'long',year:'numeric'})
+                th=dateTime.fromFormat(item.month,`yyyy'-'MM`,{locale:'fr'}).toLocaleString({month:'long',year:'numeric'})
+                td=`${item.costForTheMonth.toFixed(2)} €`
                 td=item.totalConsumption
-                td=item.weightedConsumption
+                td=item.weightedConsumption.toFixed(2)
         else if (type==='by-day')
           thead 
             tr
               th Jour 
-              th Conso totale
+              th Coût journalier
+              th Conso totale (lecture)
+              th Conso pondérée par radiateur
+              th Coût unitaire 
           tbody
             each item in data 
               tr 
-                td=dateTime.fromFormat(item.day,`yyyy'-'MM'-'dd`,{locale:'fr'}).toLocaleString({weekday:'long',day:'numeric',month:'long',year:'numeric'}) 
+                th=dateTime.fromFormat(item.day,`yyyy'-'MM'-'dd`,{locale:'fr'}).toLocaleString({weekday:'long',day:'numeric',month:'long',year:'numeric'}) 
+                td=`${item.costForTheDay.toFixed(2)} €`
                 td=item.totalConsumption
+                td=item.weightedConsumption.toFixed(2)
+                td=`${item.unitCost} €/kwh`
         else if (type==='by-month-and-device')        
           thead
             tr 
               th Mois
               th Appareil
+              th Coût mensuel
               th Conso totale
               th Conso pondérée
           tbody
             each item in data 
               tr 
-                td=dateTime.fromFormat(item.month,`yyyy'-'MM`,{locale:'fr'}).toLocaleString({month:'long',year:'numeric'})
+                th=dateTime.fromFormat(item.month,`yyyy'-'MM`,{locale:'fr'}).toLocaleString({month:'long',year:'numeric'})
                 td=item.location
+                td=`${item.costForTheMonth.toFixed(2)} €`
                 td=item.totalConsumption 
-                td=item.weightedConsumption               
+                td=item.weightedConsumption.toFixed(2)              
     #links
       h3 Autres options:
       ul 
