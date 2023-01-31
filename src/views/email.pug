@@ -1,0 +1,32 @@
+html
+  head    
+  body
+    h3=`Voici ta consommation pour le ${day.setLocale('fr').toLocaleString({weekday:'long',day:'numeric',month:'long',year:'numeric'})}` 
+    #summary
+      table(style='text-align:center;')
+        
+        thead 
+          tr(style='font-size: larger;')
+            th Appareil
+            th Coût journalier
+            th Conso (lecture)
+            th Coefficient appareil
+            th Coût unitaire 
+        tbody
+          each item in data 
+            tr(style='padding-bottom:10px;')
+              th=item.location
+              td=`${item.costForTheDay.toFixed(2)} €`
+              td=item.consumption
+              td=item.coefficient
+              td=`${item.unitCost} €/kwh`
+        tfoot
+          tr(style='font-size: larger;')
+            th TOTAUX
+            td=`${totals.cost.toFixed(2)} €`
+            td=totals.consumption
+            td(colspan=2)
+
+          
+                     
+    

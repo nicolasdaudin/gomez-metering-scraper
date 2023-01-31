@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
-import { LOCATIONS_FROM_ID } from '../dataset/heaterLocations';
+import { DateTime } from 'luxon';
+import Measure from '../model/Measure';
 import { GomezExtractor } from '../service/extractor/GomezExtractor';
 import { MeasureStore } from '../service/measure/MeasureStore';
 import { EmailNotifier } from '../service/notifications/EmailNotifier';
-import { HtmlReport } from '../service/report/HtmlReport';
+import { DailyEmailReport } from '../service/report/DailyEmailReport';
 import { TypedRequestParam } from '../types/GomezRequest';
 
 export const extractYesterdayMeasures = async (req: Request, res: Response) => {
@@ -25,10 +26,13 @@ export const extractYesterdayMeasures = async (req: Request, res: Response) => {
 
   await MeasureStore.save(measures);
 
-  const notifier = new EmailNotifier(
-    new HtmlReport(measures.slice(0, 7), LOCATIONS_FROM_ID)
-  );
-  await notifier.notify('nicolas.daudin@gmail.com', measures[0].measureDate);
+  // get consolidated info for extracted measures
+  const yesterday = DateTime.now().minus({ days: 1 }).startOf('day');
+
+  const data = await Measure.aggregateConsumptionByDayAndDevice(yesterday);
+
+  const notifier = new EmailNotifier(new DailyEmailReport(data, yesterday));
+  await notifier.notify('nicolas.daudin@gmail.com', yesterday);
 
   res.status(200).json({
     message: 'Succesfully extracted data for yesterday',

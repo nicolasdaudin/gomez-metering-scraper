@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon';
 import { Schema, model, Model } from 'mongoose';
 import Device from './Device';
+import { AggregateByDayAndDevice } from './MeasureAggregate';
 import {
   addCostFields,
   addDateFields,
@@ -43,14 +44,7 @@ interface MeasureModel extends Model<MeasurePOJO> {
     costForTheDay: number;
   }[];
 
-  aggregateConsumptionByDayAndDevice(day: DateTime): {
-    day: string;
-    consumption: string;
-    location: string;
-    unitCost: number;
-    costForTheDay: number;
-    coefficient: number;
-  }[];
+  aggregateConsumptionByDayAndDevice(day: DateTime): AggregateByDayAndDevice[];
 }
 
 const measureSchema = new Schema<MeasurePOJO, MeasureModel>(

@@ -1,11 +1,13 @@
-import { IMeasure } from '../measure/IMeasure';
 import { INotifier } from './INotifier';
 import nodemailer from 'nodemailer';
 import { DateTime } from 'luxon';
 import { IReport } from '../report/IReport';
+import { AggregateByDayAndDevice } from '../../model/MeasureAggregate';
 
-export class EmailNotifier implements INotifier<IReport<IMeasure>> {
-  constructor(public report: IReport<IMeasure>) {}
+export class EmailNotifier
+  implements INotifier<IReport<AggregateByDayAndDevice>>
+{
+  constructor(public report: IReport<AggregateByDayAndDevice>) {}
   async notify(to: string, date: DateTime): Promise<void> {
     const transporter = nodemailer.createTransport({
       // service: 'gmail',
@@ -23,8 +25,8 @@ export class EmailNotifier implements INotifier<IReport<IMeasure>> {
       },
     });
 
-    const subjectDate = date.setLocale('es').toLocaleString(DateTime.DATE_FULL);
-    const subject = `Tu consumo para el día ${subjectDate}`;
+    const subjectDate = date.setLocale('fr').toLocaleString(DateTime.DATE_FULL);
+    const subject = `Ta consommation pour le ${subjectDate}`;
 
     const mailHtml = this.report.build();
     const env = process.env.NODE_ENV === 'production' ? 'PROD' : 'DEV';
