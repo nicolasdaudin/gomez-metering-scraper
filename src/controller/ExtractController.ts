@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { DateTime } from 'luxon';
+import Device from '../model/Device';
 import Measure from '../model/Measure';
 import { GomezExtractor } from '../service/extractor/GomezExtractor';
 import { MeasureStore } from '../service/measure/MeasureStore';
@@ -65,7 +66,67 @@ export const extractHistoricalMeasures = async (
   await MeasureStore.save(measures);
 
   res.status(200).json({
-    message: 'Succesfully extracted historic data from Gomez',
+    message: `Succesfully extracted historic data from Gomez. Don't forget to clean out of range values at /extract/historic/clean`,
     data: measures,
+  });
+};
+
+export const clean = async (req: Request, res: Response) => {
+  // clean info from 18-09-2022, 13-06-2022,15-06-2022, 17-06-2022
+  const updateAllDevicesUpdateResult = await Measure.updateMany(
+    {
+      $or: [
+        {
+          measureDate: {
+            $gte: '2022-06-13',
+            $lt: '2022-06-18',
+          },
+        },
+
+        {
+          measureDate: {
+            $gte: '2022-09-18',
+            $lt: '2022-09-19',
+          },
+        },
+      ],
+    },
+
+    { consumption: 0 }
+  );
+
+  // clean info for baño pequeño and date 21-11-2022
+  const device21112022 = await Device.findOne({ serialNumber: 30796099 });
+  const updateOneDevice21112022UpdateResult = await Measure.updateMany(
+    {
+      measureDate: {
+        $gte: '2022-11-21',
+        $lt: '2022-11-22',
+      },
+      device: device21112022?._id,
+    },
+    { consumption: 0 }
+  );
+
+  // clean info for salón and date 08-03-2022
+  const device08032022 = await Device.findOne({ serialNumber: 30254633 });
+  const updateOneDevice08032022UpdateResult = await Measure.updateMany(
+    {
+      measureDate: {
+        $gte: '2022-03-08',
+        $lt: '2022-03-10',
+      },
+      device: device08032022?._id,
+    },
+    { consumption: 0 }
+  );
+
+  res.status(200).json({
+    message: `Succesfully updated ${
+      updateAllDevicesUpdateResult.modifiedCount +
+      updateOneDevice08032022UpdateResult.modifiedCount +
+      updateOneDevice21112022UpdateResult.modifiedCount
+    } measures that were out of bound`,
+    data: [],
   });
 };
