@@ -12,6 +12,8 @@ html
       a(href="/summary/byDay") Résumé par jour
       | &nbsp;-&nbsp;
       a(href="/summary/byMonthAndDevice") Résumé par mois et appareil
+      | &nbsp;-&nbsp;
+      a(href="/summary/byInvoice") Résumé par facture Gomez
     h1= title
     #summary.container-sm
       table.table.table-striped.table-hover.table-sm
@@ -86,4 +88,20 @@ html
                 td=item.location
                 td=`${item.costForTheMonth.toFixed(2)} €`
                 td=item.totalConsumption 
-                td=item.weightedConsumption.toFixed(2)              
+                td=item.weightedConsumption.toFixed(2)   
+        else if (type==='by-invoice')        
+          thead
+            tr.fs-5
+              th Début
+              th Fin
+              th Appareil
+              th Coût durant la période
+              th Conso totale              
+          tbody
+            each item in data 
+              tr 
+                th=dateTime.fromFormat(item.beginDay,`yyyy'-'MM'-'dd`,{locale:'fr'}).toLocaleString({weekday:'long',day:'numeric',month:'long',year:'numeric'}) 
+                th=dateTime.fromFormat(item.endDay,`yyyy'-'MM'-'dd`,{locale:'fr'}).toLocaleString({weekday:'long',day:'numeric',month:'long',year:'numeric'}) 
+                td=item.location
+                td=`${item.costForThePeriod.toFixed(2)} €`
+                td=item.consumption          

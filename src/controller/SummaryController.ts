@@ -79,3 +79,12 @@ export const getSummaryByDay = async (
   //   data,
   // });
 };
+
+export const getSummaryByInvoice = async (req: Request, res: Response) => {
+  const data = await Measure.aggregateConsumptionByGomezInvoice();
+  res.render('summary', {
+    title: 'Résumé par intervalle de dates',
+    type: 'by-invoice',
+    data,
+  });
+};

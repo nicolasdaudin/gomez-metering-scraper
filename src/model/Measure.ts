@@ -45,6 +45,14 @@ interface MeasureModel extends Model<MeasurePOJO> {
   }[];
 
   aggregateConsumptionByDayAndDevice(day: DateTime): AggregateByDayAndDevice[];
+
+  aggregateConsumptionByGomezInvoice(): {
+    beginDay: string;
+    endDay: string;
+    consumption: number;
+    costForThePeriod: number;
+    location: string;
+  }[];
 }
 
 const measureSchema = new Schema<MeasurePOJO, MeasureModel>(
@@ -65,7 +73,7 @@ measureSchema.static(
     const result = await Measure.aggregate([
       ...lookupDevices,
       ...groupByDateAndDevice(true),
-      ...lookupDailyEnergyCost,
+      ...lookupDailyEnergyCost(),
       ...lookupDefaultEnergyCost,
       ...addDateFields,
       ...addCostFields,
@@ -96,7 +104,7 @@ measureSchema.static(
     const result = await Measure.aggregate([
       ...lookupDevices,
       ...groupByDateAndDevice(),
-      ...lookupDailyEnergyCost,
+      ...lookupDailyEnergyCost(),
       ...lookupDefaultEnergyCost,
       ...addDateFields,
       ...addCostFields,
@@ -124,7 +132,7 @@ measureSchema.static(
     const result = await Measure.aggregate([
       ...lookupDevices,
       ...groupByDateAndDevice(),
-      ...lookupDailyEnergyCost,
+      ...lookupDailyEnergyCost(),
       ...lookupDefaultEnergyCost,
       ...addDateFields,
       ...addCostFields,
@@ -162,41 +170,8 @@ measureSchema.static(
           },
         },
       },
-      {
-        $lookup: {
-          from: 'devices',
-          localField: 'device',
-          foreignField: '_id',
-          as: 'deviceObject',
-        },
-      },
-      {
-        $addFields: {
-          thisDevice: {
-            $arrayElemAt: ['$deviceObject', 0],
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: 'energycosts',
-          pipeline: [
-            {
-              $sort: {
-                endDate: 1,
-              },
-            },
-          ],
-          as: 'allCosts',
-        },
-      },
-      {
-        $addFields: {
-          defaultCostObject: {
-            $last: '$allCosts',
-          },
-        },
-      },
+      ...lookupDevices,
+      ...lookupDefaultEnergyCost,
       {
         $addFields: {
           day: {
@@ -229,6 +204,76 @@ measureSchema.static(
       },
       {
         $sort: {
+          location: 1,
+        },
+      },
+    ]);
+    console.log(result);
+    return result;
+  }
+);
+
+measureSchema.static(
+  'aggregateConsumptionByGomezInvoice',
+  async function aggregateConsumptionByGomezInvoice() {
+    const result = await Measure.aggregate([
+      ...lookupDevices,
+      ...lookupDailyEnergyCost('$measureDate'),
+      {
+        // only keep objects which had a corresponding cost
+        $match: {
+          initCostObject: {
+            $exists: true,
+          },
+        },
+      },
+      {
+        // filter by energy cost dates (= invoice dates)
+        $group: {
+          _id: {
+            beginDate: '$initCostObject.beginDate',
+            endDate: '$initCostObject.endDate',
+            location: '$thisDevice.location',
+          },
+          consumption: {
+            $sum: '$consumption',
+          },
+          costForThePeriod: {
+            $sum: {
+              $multiply: [
+                '$consumption',
+                '$thisDevice.coefficient',
+                '$initCostObject.cost',
+              ],
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          beginDay: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$_id.beginDate',
+            },
+          },
+          endDay: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$_id.endDate',
+            },
+          },
+          location: '$_id.location',
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+        },
+      },
+      {
+        $sort: {
+          beginDay: 1,
           location: 1,
         },
       },

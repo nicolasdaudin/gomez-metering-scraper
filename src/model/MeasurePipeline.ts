@@ -19,44 +19,48 @@ export const lookupDevices: PipelineStage[] = [
   },
 ];
 
-export const lookupDailyEnergyCost: PipelineStage[] = [
-  {
-    // look for the corresponding energy cost for each day
-    // energy costs are values stored between a begin and end date
-    $lookup: {
-      from: 'energycosts',
-      let: {
-        measureMeasureDate: '$_id.date',
-      },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $and: [
-                {
-                  $lte: ['$beginDate', '$$measureMeasureDate'],
-                },
-                {
-                  $gte: ['$endDate', '$$measureMeasureDate'],
-                },
-              ],
+export const lookupDailyEnergyCost = function (
+  dateFieldName = '$_id.date'
+): PipelineStage[] {
+  return [
+    {
+      // look for the corresponding energy cost for each day
+      // energy costs are values stored between a begin and end date
+      $lookup: {
+        from: 'energycosts',
+        let: {
+          measureMeasureDate: dateFieldName,
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  {
+                    $lte: ['$beginDate', '$$measureMeasureDate'],
+                  },
+                  {
+                    $gte: ['$endDate', '$$measureMeasureDate'],
+                  },
+                ],
+              },
             },
           },
-        },
-      ],
-      as: 'cost',
-    },
-  },
-  {
-    // we get the cost from the corresponding array we got at the previous step
-
-    $addFields: {
-      initCostObject: {
-        $arrayElemAt: ['$cost', 0],
+        ],
+        as: 'cost',
       },
     },
-  },
-];
+    {
+      // we get the cost from the corresponding array we got at the previous step
+
+      $addFields: {
+        initCostObject: {
+          $arrayElemAt: ['$cost', 0],
+        },
+      },
+    },
+  ];
+};
 
 export const lookupDefaultEnergyCost: PipelineStage[] = [
   {
