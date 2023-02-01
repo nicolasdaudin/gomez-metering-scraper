@@ -78,15 +78,15 @@ export const clean = async (req: Request, res: Response) => {
       $or: [
         {
           measureDate: {
-            $gte: '2022-06-13',
-            $lt: '2022-06-18',
+            $gte: '2022-06-12',
+            $lt: '2022-06-19',
           },
         },
 
         {
           measureDate: {
             $gte: '2022-09-18',
-            $lt: '2022-09-19',
+            $lt: '2022-09-20',
           },
         },
       ],
@@ -95,15 +95,15 @@ export const clean = async (req: Request, res: Response) => {
     { consumption: 0 }
   );
 
-  // clean info for baño pequeño and date 21-11-2022
-  const device21112022 = await Device.findOne({ serialNumber: 30796099 });
-  const updateOneDevice21112022UpdateResult = await Measure.updateMany(
+  // clean info for baño pequeño and date 22-11-2022
+  const device22112022 = await Device.findOne({ serialNumber: 30796099 });
+  const updateOneDevice22112022UpdateResult = await Measure.updateMany(
     {
       measureDate: {
-        $gte: '2022-11-21',
-        $lt: '2022-11-22',
+        $gte: '2022-11-22',
+        $lt: '2022-11-23',
       },
-      device: device21112022?._id,
+      device: device22112022?._id,
     },
     { consumption: 0 }
   );
@@ -114,7 +114,7 @@ export const clean = async (req: Request, res: Response) => {
     {
       measureDate: {
         $gte: '2022-03-08',
-        $lt: '2022-03-10',
+        $lt: '2022-03-11',
       },
       device: device08032022?._id,
     },
@@ -125,7 +125,7 @@ export const clean = async (req: Request, res: Response) => {
     message: `Succesfully updated ${
       updateAllDevicesUpdateResult.modifiedCount +
       updateOneDevice08032022UpdateResult.modifiedCount +
-      updateOneDevice21112022UpdateResult.modifiedCount
+      updateOneDevice22112022UpdateResult.modifiedCount
     } measures that were out of bound`,
     data: [],
   });
