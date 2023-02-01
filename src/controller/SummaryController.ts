@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { DateTime } from 'luxon';
 import Measure from '../model/Measure';
+import { EmailNotifier } from '../service/notifications/EmailNotifier';
+import { DailyEmailReport } from '../service/report/DailyEmailReport';
 
 export const getYesterdaySummaryByDevice = async (
   req: Request,
@@ -8,13 +10,6 @@ export const getYesterdaySummaryByDevice = async (
   // res: TypedResponse<{ data: IMeasure[] }>
   res: Response
 ) => {
-  // const yesterday = DateTime.now().minus({ days: 1 }).startOf('day');
-  // const data = await Measure.find({
-  //   measureDate: yesterday,
-  // }).populate('device');
-  // res.status(200).json({
-  //   data,
-  // });
   const yesterday = DateTime.now().minus({ days: 1 }).startOf('day');
   const data = await Measure.aggregateConsumptionByDayAndDevice(yesterday);
 
@@ -37,6 +32,30 @@ export const getYesterdaySummaryByDevice = async (
     type: 'by-day-and-device',
     data,
     totals,
+  });
+};
+
+export const sendYesterdaySummaryByDevice = async (
+  req: Request,
+  res: Response
+) => {
+  // get consolidated info for extracted measures
+  const yesterday = DateTime.now().minus({ days: 1 }).startOf('day');
+
+  const yesterdayData = await Measure.aggregateConsumptionByDayAndDevice(
+    yesterday
+  );
+
+  const byMonth = await Measure.aggregateConsumptionByMonth();
+
+  const notifier = new EmailNotifier(
+    new DailyEmailReport(yesterdayData, byMonth, yesterday)
+  );
+  await notifier.notify('nicolas.daudin@gmail.com', yesterday);
+
+  res.status(200).json({
+    message: 'Succesfully sent data by email for yesterday',
+    data: yesterdayData,
   });
 };
 

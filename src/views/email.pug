@@ -26,7 +26,15 @@ html
             td=`${totals.cost.toFixed(2)} €`
             td=totals.consumption
             td(colspan=2)
-
-          
-                     
-    
+    h3=`Voici la consommation des derniers mois`
+    #lastMonth 
+      table(style='text-align:center;')        
+        thead 
+          tr(style='font-size: larger;')
+            th Mois
+            th Coût
+        tbody
+          each item in byMonth 
+            tr(style='padding-bottom:10px;')
+              th=item.month
+              td=`${item.costForTheMonth.toFixed(2)} €`

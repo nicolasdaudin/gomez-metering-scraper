@@ -7,6 +7,13 @@ export interface AggregateByDayAndDevice {
   coefficient: number;
 }
 
+export interface AggregateByMonth {
+  month: string;
+  weightedConsumption: number;
+  totalConsumption: number;
+  costForTheMonth: number;
+}
+
 export const calculateByDayAndDevice = (
   data: AggregateByDayAndDevice[]
 ): { cost: number; consumption: number } => {

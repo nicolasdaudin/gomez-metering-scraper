@@ -30,14 +30,20 @@ export const extractYesterdayMeasures = async (req: Request, res: Response) => {
   // get consolidated info for extracted measures
   const yesterday = DateTime.now().minus({ days: 1 }).startOf('day');
 
-  const data = await Measure.aggregateConsumptionByDayAndDevice(yesterday);
+  const yesterdayData = await Measure.aggregateConsumptionByDayAndDevice(
+    yesterday
+  );
 
-  const notifier = new EmailNotifier(new DailyEmailReport(data, yesterday));
+  const byMonth = await Measure.aggregateConsumptionByMonth();
+
+  const notifier = new EmailNotifier(
+    new DailyEmailReport(yesterdayData, byMonth, yesterday)
+  );
   await notifier.notify('nicolas.daudin@gmail.com', yesterday);
 
   res.status(200).json({
     message: 'Succesfully extracted data for yesterday',
-    data: measures,
+    data: yesterdayData,
   });
 };
 
