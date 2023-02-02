@@ -39,6 +39,15 @@ export const sendYesterdaySummaryByDevice = async (
   req: Request,
   res: Response
 ) => {
+  if (!process.env.REPORT_EMAIL_TO) {
+    res.status(500).json({
+      data: [],
+      message:
+        'Email for reports is missing from environment variables, please check if you have correctly set up REPORT_EMAIL_TO',
+    });
+    return;
+  }
+
   // get consolidated info for extracted measures
   const yesterday = DateTime.now().minus({ days: 1 }).startOf('day');
 
@@ -51,7 +60,7 @@ export const sendYesterdaySummaryByDevice = async (
   const notifier = new EmailNotifier(
     new DailyEmailReport(yesterdayData, byMonth, yesterday)
   );
-  await notifier.notify('nicolas.daudin@gmail.com', yesterday);
+  await notifier.notify(process.env.REPORT_EMAIL_TO, yesterday);
 
   res.status(200).json({
     message: 'Succesfully sent data by email for yesterday',

@@ -10,11 +10,15 @@ import { TypedRequestParam } from '../types/GomezRequest';
 
 export const extractYesterdayMeasures = async (req: Request, res: Response) => {
   console.log('Reading from Gomez....');
-  if (!process.env.GOMEZ_USER || !process.env.GOMEZ_PASSWORD) {
+  if (
+    !process.env.GOMEZ_USER ||
+    !process.env.GOMEZ_PASSWORD ||
+    !process.env.REPORT_EMAIL_TO
+  ) {
     res.status(500).json({
       data: [],
       message:
-        'Gomez Metering credentials missing from environment variables, please init GOMEZ_USER and GOMEZ_PASSWORD',
+        'Either email for reports or Gomez Metering credentials are missing from environment variables, please check environment variables, especially GOMEZ_USER, GOMEZ_PASSWORD and REPORT_EMAIL_TO',
     });
     return;
   }
@@ -39,7 +43,7 @@ export const extractYesterdayMeasures = async (req: Request, res: Response) => {
   const notifier = new EmailNotifier(
     new DailyEmailReport(yesterdayData, byMonth, yesterday)
   );
-  await notifier.notify('nicolas.daudin@gmail.com', yesterday);
+  await notifier.notify(process.env.REPORT_EMAIL_TO, yesterday);
 
   res.status(200).json({
     message: 'Succesfully extracted data for yesterday',
