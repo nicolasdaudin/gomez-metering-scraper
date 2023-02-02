@@ -161,9 +161,11 @@ measureSchema.static(
 
 measureSchema.static(
   'aggregateConsumptionByDayAndDevice',
+  // FIXME: this will not work for days other than yesterday since it takes the last eenrgy cost (and should take either the cost for that day or if it does not exis, the last known cost)
   async function aggregateConsumptionByDayAndDevice(day: DateTime) {
     const result = await Measure.aggregate([
       {
+        // only get measures for that particular day
         $match: {
           measureDate: {
             $gte: day,
@@ -183,6 +185,7 @@ measureSchema.static(
           },
           location: '$thisDevice.location',
           unitCost: '$lastEnergyCost.cost',
+          // calculate cost for that day, multiplying the device consumption, the coefficient for that device and the cost for that day
           costForTheDay: {
             $multiply: [
               '$consumption',
@@ -230,6 +233,7 @@ measureSchema.static(
       },
       {
         // filter by energy cost dates (= invoice dates)
+        // and sums consumption and costs for these periods
         $group: {
           _id: {
             beginDate: '$initCostObject.beginDate',
@@ -299,6 +303,7 @@ measureSchema.static(
         },
       },
       {
+        // only get measures that have their date after the last invoice date
         $match: {
           $expr: {
             $gte: ['$isoDate', '$lastInvoiceDate'],
@@ -306,6 +311,7 @@ measureSchema.static(
         },
       },
       {
+        // computes value for this day
         $addFields: {
           costForTheDay: {
             sum: {
