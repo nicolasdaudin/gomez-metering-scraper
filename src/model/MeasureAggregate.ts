@@ -1,3 +1,5 @@
+import { DateTime } from 'luxon';
+
 export interface AggregateByDayAndDevice {
   day: string;
   consumption: string;
@@ -14,7 +16,15 @@ export interface AggregateByMonth {
   costForTheMonth: number;
 }
 
-export const calculateByDayAndDevice = (
+export type AggregateSinceLastInvoice = {
+  totalConsumption: number;
+  weightedConsumption: number;
+  totalCost: number;
+  lastInvoiceDate: DateTime;
+  lastCost: number;
+};
+
+export const calculateTotal = (
   data: AggregateByDayAndDevice[]
 ): { cost: number; consumption: number } => {
   // calculate total cost and total consumption for the day

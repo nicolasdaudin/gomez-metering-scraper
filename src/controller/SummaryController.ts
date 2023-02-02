@@ -57,8 +57,12 @@ export const sendYesterdaySummaryByDevice = async (
 
   const byMonth = await Measure.aggregateConsumptionByMonth();
 
+  const sinceLastInvoice = (
+    await Measure.aggregateConsumptionSinceLastInvoice()
+  )[0];
+
   const notifier = new EmailNotifier(
-    new DailyEmailReport(yesterdayData, byMonth, yesterday)
+    new DailyEmailReport(yesterdayData, byMonth, sinceLastInvoice, yesterday)
   );
   await notifier.notify(process.env.REPORT_EMAIL_TO, yesterday);
 

@@ -62,7 +62,7 @@ export const lookupDailyEnergyCost = function (
   ];
 };
 
-export const lookupDefaultEnergyCost: PipelineStage[] = [
+export const lookupLastEnergyCost: PipelineStage[] = [
   {
     // we again look at energy csots but this time we want to get all energy costs
     // and retrieve the 'last' defined energy cost (last by date)
@@ -81,7 +81,7 @@ export const lookupDefaultEnergyCost: PipelineStage[] = [
   },
   {
     $addFields: {
-      defaultCostObject: {
+      lastEnergyCost: {
         $last: '$allCosts',
       },
     },
@@ -164,7 +164,7 @@ export const addCostFields: PipelineStage[] = [
       // using default values if needed
       {
         unitCost: {
-          $ifNull: ['$initCostObject.cost', '$defaultCostObject.cost'],
+          $ifNull: ['$initCostObject.cost', '$lastEnergyCost.cost'],
         },
         costForTheDay: {
           $ifNull: [
@@ -172,7 +172,7 @@ export const addCostFields: PipelineStage[] = [
               $multiply: ['$weightedConsumption', '$initCostObject.cost'],
             },
             {
-              $multiply: ['$weightedConsumption', '$defaultCostObject.cost'],
+              $multiply: ['$weightedConsumption', '$lastEnergyCost.cost'],
             },
           ],
         },

@@ -26,6 +26,9 @@ html
             td=`${totals.cost.toFixed(2)} €`
             td=totals.consumption
             td(colspan=2)
+    //- h3=`Consommation depuis ta dernière facture (${sinceLastInvoice.lastInvoiceDate.setLocale('fr').toLocaleString({weekday:'long',day:'numeric',month:'long',year:'numeric'})}): ${sinceLastInvoice.totalCost.toFixed(2)} €`
+    h3=`Consommation depuis ta dernière facture : ${sinceLastInvoice.totalCost.toFixed(2)} €`
+
     h3=`Voici la consommation des derniers mois`
     #lastMonth 
       table(style='text-align:center;')        

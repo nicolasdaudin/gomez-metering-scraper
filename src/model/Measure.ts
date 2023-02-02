@@ -1,12 +1,16 @@
 import { DateTime } from 'luxon';
 import { Schema, model, Model } from 'mongoose';
 import Device from './Device';
-import { AggregateByDayAndDevice, AggregateByMonth } from './MeasureAggregate';
+import {
+  AggregateByDayAndDevice,
+  AggregateByMonth,
+  AggregateSinceLastInvoice,
+} from './MeasureAggregate';
 import {
   addCostFields,
   addDateFields,
   addLocationField,
-  lookupDefaultEnergyCost,
+  lookupLastEnergyCost,
   lookupDevices,
   lookupDailyEnergyCost,
   groupByDateAndDevice,
@@ -48,6 +52,8 @@ interface MeasureModel extends Model<MeasurePOJO> {
     costForThePeriod: number;
     location: string;
   }[];
+
+  aggregateConsumptionSinceLastInvoice(): AggregateSinceLastInvoice[];
 }
 
 const measureSchema = new Schema<MeasurePOJO, MeasureModel>(
@@ -69,7 +75,7 @@ measureSchema.static(
       ...lookupDevices,
       ...groupByDateAndDevice(true),
       ...lookupDailyEnergyCost(),
-      ...lookupDefaultEnergyCost,
+      ...lookupLastEnergyCost,
       ...addDateFields,
       ...addCostFields,
       ...addLocationField,
@@ -100,7 +106,7 @@ measureSchema.static(
       ...lookupDevices,
       ...groupByDateAndDevice(),
       ...lookupDailyEnergyCost(),
-      ...lookupDefaultEnergyCost,
+      ...lookupLastEnergyCost,
       ...addDateFields,
       ...addCostFields,
       ...groupByMonthAndDevice(),
@@ -128,7 +134,7 @@ measureSchema.static(
       ...lookupDevices,
       ...groupByDateAndDevice(),
       ...lookupDailyEnergyCost(),
-      ...lookupDefaultEnergyCost,
+      ...lookupLastEnergyCost,
       ...addDateFields,
       ...addCostFields,
       {
@@ -166,7 +172,7 @@ measureSchema.static(
         },
       },
       ...lookupDevices,
-      ...lookupDefaultEnergyCost,
+      ...lookupLastEnergyCost,
       {
         $addFields: {
           day: {
@@ -176,11 +182,11 @@ measureSchema.static(
             },
           },
           location: '$thisDevice.location',
-          unitCost: '$defaultCostObject.cost',
+          unitCost: '$lastEnergyCost.cost',
           costForTheDay: {
             $multiply: [
               '$consumption',
-              '$defaultCostObject.cost',
+              '$lastEnergyCost.cost',
               '$thisDevice.coefficient',
             ],
           },
@@ -270,6 +276,64 @@ measureSchema.static(
         $sort: {
           beginDay: 1,
           location: 1,
+        },
+      },
+    ]);
+    console.log(result);
+    return result;
+  }
+);
+
+measureSchema.static(
+  'aggregateConsumptionSinceLastInvoice',
+  async function aggregateConsumptionSinceLastInvoice() {
+    const result = await Measure.aggregate([
+      ...lookupDevices,
+      ...groupByDateAndDevice(),
+      ...lookupLastEnergyCost,
+      ...addDateFields,
+      {
+        $addFields: {
+          lastCost: '$lastEnergyCost.cost',
+          lastInvoiceDate: '$lastEnergyCost.endDate',
+        },
+      },
+      {
+        $match: {
+          $expr: {
+            $gte: ['$isoDate', '$lastInvoiceDate'],
+          },
+        },
+      },
+      {
+        $addFields: {
+          costForTheDay: {
+            sum: {
+              $multiply: ['$lastCost', '$weightedConsumption'],
+            },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalConsumption: {
+            $sum: '$totalConsumption',
+          },
+          weightedConsumption: {
+            $sum: '$weightedConsumption',
+          },
+          totalCost: {
+            $sum: {
+              $multiply: ['$weightedConsumption', '$lastCost'],
+            },
+          },
+          lastInvoiceDate: {
+            $max: '$lastInvoiceDate',
+          },
+          lastCost: {
+            $max: '$lastCost',
+          },
         },
       },
     ]);
