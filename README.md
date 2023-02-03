@@ -8,7 +8,17 @@ Il s'agit d'un side-project, qui m'a permis de pratiquer TypeScript et notamment
 
 Il y a évidemment plein de features manquantes (voir ci-dessous) mais le projet est en production et fonctionne, et m'envoit un email tous les jours avec les dernières lectures.
 
-Retrouvez le projet ici : [Gomez Metering Scraper](https://gomez-metering-scraper.herokuapp.com/summary/yesterday)
+Retrouvez l'interface ici : [Gomez Metering Scraper](https://gomez-metering-scraper.herokuapp.com/summary/yesterday)
+
+Voici les différentes parties de l'interface:
+
+- [Résumé des mesures d'hier](https://gomez-metering-scraper.herokuapp.com/summary/yesterday)
+- [Résumé des mesures par mois](https://gomez-metering-scraper.herokuapp.com/summary/byMonth)
+- [Résumé des mesures par jour](https://gomez-metering-scraper.herokuapp.com/summary/byDay)
+- [Résumé des mesures par mois et appareil](https://gomez-metering-scraper.herokuapp.com/summary/byMonthAndDevice)
+- [Résumé des mesures par facture](https://gomez-metering-scraper.herokuapp.com/summary/byInvoice)
+
+Il existe également une API, dont voici la documentation : https://documenter.getpostman.com/view/18011617/2s935msjpU
 
 ### Tech stack
 
@@ -20,7 +30,7 @@ Pug est utilisé pour renderer l'interface depuis le serveur.
 
 Le tout est déployé sur Heroku, sur une [dyno Eco](https://devcenter.heroku.com/articles/eco-dyno-hours) (qui donc, s'endort au bout de [30 minutes sans activité](https://devcenter.heroku.com/articles/eco-dyno-hours#dyno-sleeping)).
 
-Un cron Heroku, qui utilise le script [wake_up_cron.js](/wake_up_cron.js), permet de réveiller le serveur toutes les nuits pour aller chercher les nouvelles lectures disponibles.
+Un cron Heroku, qui utilise le script [wake_up_cron.js](/wake_up_cron.js), permet de réveiller le serveur toutes les nuits pour aller chercher les nouvelles lectures disponibles (il effectue une requête GET à la route `/extract/yesterday`)
 
 ### Login chez Gomez Metering Group
 
