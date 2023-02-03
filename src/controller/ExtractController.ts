@@ -34,24 +34,89 @@ export const extractYesterdayMeasures = async (req: Request, res: Response) => {
   // get consolidated info for extracted measures
   const yesterday = DateTime.now().minus({ days: 1 }).startOf('day');
 
-  const yesterdayData = await Measure.aggregateConsumptionByDayAndDevice(
+  const yesterdayMeasures = await Measure.aggregateConsumptionByDayAndDevice(
     yesterday
   );
 
-  const byMonth = await Measure.aggregateConsumptionByMonth();
+  const byMonthAggregate = await Measure.aggregateConsumptionByMonth();
 
-  const sinceLastInvoice = (
+  const sinceLastInvoiceAggregate = (
     await Measure.aggregateConsumptionSinceLastInvoice()
   )[0];
 
   const notifier = new EmailNotifier(
-    new DailyEmailReport(yesterdayData, byMonth, sinceLastInvoice, yesterday)
+    new DailyEmailReport(
+      yesterdayMeasures,
+      byMonthAggregate,
+      sinceLastInvoiceAggregate,
+      yesterday
+    )
   );
   await notifier.notify(process.env.REPORT_EMAIL_TO, yesterday);
 
   res.status(200).json({
     message: 'Succesfully extracted data for yesterday',
-    data: yesterdayData,
+    data: yesterdayMeasures,
+  });
+};
+
+export const updateSpecificDateMeasures = async (
+  req: Request,
+  res: Response
+) => {
+  console.log('Reading from Gomez....');
+  if (
+    !process.env.GOMEZ_USER ||
+    !process.env.GOMEZ_PASSWORD ||
+    !process.env.REPORT_EMAIL_TO
+  ) {
+    res.status(500).json({
+      data: [],
+      message:
+        'Either email for reports or Gomez Metering credentials are missing from environment variables, please check environment variables, especially GOMEZ_USER, GOMEZ_PASSWORD and REPORT_EMAIL_TO',
+    });
+    return;
+  }
+
+  const measures = await GomezExtractor.extract(
+    process.env.GOMEZ_USER,
+    process.env.GOMEZ_PASSWORD,
+    7
+  );
+  console.log('nb of measures we got from fetchGomez', measures.length);
+
+  // get consolidated info for extracted measures
+  const date = DateTime.fromISO(req.params.date);
+  const measuresForThatDay = measures.filter((measure) =>
+    measure.measureDate.startOf('day').equals(date.startOf('day'))
+  );
+  console.log(
+    `we will update ${measuresForThatDay.length} measures for date ${req.params.date}`
+  );
+
+  await MeasureStore.update(measuresForThatDay);
+
+  const dayMeasures = await Measure.aggregateConsumptionByDayAndDevice(date);
+
+  const byMonthAggregate = await Measure.aggregateConsumptionByMonth();
+
+  const sinceLastInvoiceAggregate = (
+    await Measure.aggregateConsumptionSinceLastInvoice()
+  )[0];
+
+  const notifier = new EmailNotifier(
+    new DailyEmailReport(
+      dayMeasures,
+      byMonthAggregate,
+      sinceLastInvoiceAggregate,
+      date
+    )
+  );
+  await notifier.notify(process.env.REPORT_EMAIL_TO, date);
+
+  res.status(200).json({
+    message: `Succesfully extracted and updated data for day ${req.params.date}`,
+    // data: dayMeasures,
   });
 };
 

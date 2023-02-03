@@ -94,7 +94,6 @@ measureSchema.static(
         },
       },
     ]);
-    console.log(result);
     return result;
   }
 );
@@ -121,7 +120,6 @@ measureSchema.static(
         },
       },
     ]);
-    console.log(result);
 
     return result;
   }
@@ -154,7 +152,6 @@ measureSchema.static(
       },
     ]);
 
-    console.log(result.slice(0, 50));
     return result;
   }
 );
@@ -168,8 +165,7 @@ measureSchema.static(
         // only get measures for that particular day
         $match: {
           measureDate: {
-            $gte: day,
-            $lte: day.plus({ days: 1 }),
+            $eq: day.startOf('day'),
           },
         },
       },
@@ -212,7 +208,6 @@ measureSchema.static(
         },
       },
     ]);
-    console.log(result);
     return result;
   }
 );
@@ -283,7 +278,6 @@ measureSchema.static(
         },
       },
     ]);
-    console.log(result);
     return result;
   }
 );
@@ -343,7 +337,6 @@ measureSchema.static(
         },
       },
     ]);
-    console.log(result);
     return result;
   }
 );

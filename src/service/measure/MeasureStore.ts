@@ -4,6 +4,25 @@ import Measure from '../../model/Measure';
 import { GomezMeasure } from './GomezMeasure';
 
 export class MeasureStore {
+  static async update(measures: GomezMeasure[]): Promise<void> {
+    // console.log('Nb of docs to update', measures.length);
+    for (const measure of measures) {
+      const device = await Device.findBySerialNumber(
+        measure.deviceSerialNumber
+      );
+
+      const updated = await Measure.updateOne(
+        { device: device, measureDate: measure.measureDate },
+        { consumption: measure.consumption }
+      );
+      console.log(
+        `One measure for date ${measure.measureDate.toString()} and device ${
+          device.location
+        } has been updated with new consumption ${measure.consumption} ?`,
+        updated.modifiedCount > 0
+      );
+    }
+  }
   static async save(measures: GomezMeasure[]): Promise<void> {
     // prepare docs
     const docs = await Promise.all(

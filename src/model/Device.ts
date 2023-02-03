@@ -1,4 +1,4 @@
-import { Model, Schema, model } from 'mongoose';
+import { Model, Schema, model, HydratedDocument } from 'mongoose';
 
 interface IDevice {
   serialNumber: number;
@@ -7,7 +7,7 @@ interface IDevice {
 }
 
 interface DeviceModel extends Model<IDevice> {
-  findBySerialNumber(serialNumber: number): IDevice;
+  findBySerialNumber(serialNumber: number): HydratedDocument<IDevice>;
 }
 
 const deviceSchema = new Schema<IDevice, DeviceModel>({

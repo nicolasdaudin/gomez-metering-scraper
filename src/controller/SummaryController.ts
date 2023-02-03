@@ -51,24 +51,29 @@ export const sendYesterdaySummaryByDevice = async (
   // get consolidated info for extracted measures
   const yesterday = DateTime.now().minus({ days: 1 }).startOf('day');
 
-  const yesterdayData = await Measure.aggregateConsumptionByDayAndDevice(
+  const yesterdayMeasures = await Measure.aggregateConsumptionByDayAndDevice(
     yesterday
   );
 
-  const byMonth = await Measure.aggregateConsumptionByMonth();
+  const byMonthAggregate = await Measure.aggregateConsumptionByMonth();
 
-  const sinceLastInvoice = (
+  const sinceLastInvoiceAggregate = (
     await Measure.aggregateConsumptionSinceLastInvoice()
   )[0];
 
   const notifier = new EmailNotifier(
-    new DailyEmailReport(yesterdayData, byMonth, sinceLastInvoice, yesterday)
+    new DailyEmailReport(
+      yesterdayMeasures,
+      byMonthAggregate,
+      sinceLastInvoiceAggregate,
+      yesterday
+    )
   );
   await notifier.notify(process.env.REPORT_EMAIL_TO, yesterday);
 
   res.status(200).json({
     message: 'Succesfully sent data by email for yesterday',
-    data: yesterdayData,
+    data: yesterdayMeasures,
   });
 };
 

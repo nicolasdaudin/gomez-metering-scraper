@@ -15,7 +15,7 @@ export class GomezMeasure implements IMeasure {
   }): IMeasure {
     return new GomezMeasure(
       +deviceSerialNumber,
-      DateTime.fromFormat(measureDate, `dd'/'MM'/'yyyy`), // parsing things like '11/01/2023' for 11 January 2023
+      DateTime.fromFormat(measureDate, `dd'/'MM'/'yyyy`).startOf('day'), // parsing things like '11/01/2023' for 11 January 2023
       parseFloat(measure),
       parseFloat(consumption)
     );
