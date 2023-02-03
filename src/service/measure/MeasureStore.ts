@@ -12,9 +12,16 @@ export class MeasureStore {
       );
 
       const updated = await Measure.updateOne(
-        { device: device, measureDate: measure.measureDate },
+        {
+          device: device,
+          measureDate: {
+            $gte: measure.measureDate.startOf('day'),
+            $lte: measure.measureDate.endOf('day'),
+          },
+        },
         { consumption: measure.consumption }
       );
+
       console.log(
         `One measure for date ${measure.measureDate.toString()} and device ${
           device.location

@@ -85,12 +85,12 @@ export const updateSpecificDateMeasures = async (
   console.log('nb of measures we got from fetchGomez', measures.length);
 
   // get consolidated info for extracted measures
-  const date = DateTime.fromISO(req.params.date);
+  const date = DateTime.fromISO(req.params.date).startOf('day');
   const measuresForThatDay = measures.filter((measure) =>
-    measure.measureDate.startOf('day').equals(date.startOf('day'))
+    measure.measureDate.startOf('day').equals(date)
   );
   console.log(
-    `we will update ${measuresForThatDay.length} measures for date ${req.params.date}`
+    `we will update ${measuresForThatDay.length} measures for date ${date}`
   );
 
   await MeasureStore.update(measuresForThatDay);
@@ -114,8 +114,8 @@ export const updateSpecificDateMeasures = async (
   await notifier.notify(process.env.REPORT_EMAIL_TO, date);
 
   res.status(200).json({
-    message: `Succesfully extracted and updated data for day ${req.params.date}`,
-    // data: dayMeasures,
+    message: `Succesfully extracted and updated data for day ${date}`,
+    data: dayMeasures,
   });
 };
 

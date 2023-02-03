@@ -24,7 +24,9 @@ const validateDate = (
   if (!date.isValid) return next(new Error('date is invalid, please check it'));
 
   if (Math.abs(date.diffNow('days').as('days')) > MAX_UPDATE_MEASURES_DAYS) {
-    return next(new Error('date is too far in time. Max 7 days'));
+    return next(
+      new Error('date is too far in time. Max 7 days before current date')
+    );
   }
 
   next();

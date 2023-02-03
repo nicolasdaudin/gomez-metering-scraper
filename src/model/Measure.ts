@@ -165,7 +165,8 @@ measureSchema.static(
         // only get measures for that particular day
         $match: {
           measureDate: {
-            $eq: day.startOf('day'),
+            $gte: day.startOf('day'),
+            $lte: day.endOf('day'),
           },
         },
       },
