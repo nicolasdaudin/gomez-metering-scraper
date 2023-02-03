@@ -1,7 +1,6 @@
 import express, { Response, NextFunction } from 'express';
 import { DateTime } from 'luxon';
 import {
-  clean,
   extractHistoricalMeasures,
   extractYesterdayMeasures,
   updateSpecificDateMeasures,
@@ -34,7 +33,5 @@ const validateDate = (
 router.get('/update/:date', validateDate, updateSpecificDateMeasures);
 
 router.get('/yesterday', extractYesterdayMeasures);
-
-router.get('/historic/clean', clean);
 
 router.get('/historic/:nbOfDaysToExtract', extractHistoricalMeasures);

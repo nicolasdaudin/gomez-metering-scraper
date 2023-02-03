@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  cleanWrongMeasures,
   getSummaryByDay,
   getSummaryByInvoice,
   getSummaryByMonth,
@@ -19,3 +20,5 @@ router.get('/byDay', getSummaryByDay);
 router.get('/byMonthAndDevice', getSummaryByMonthAndDevice);
 
 router.get('/byInvoice', getSummaryByInvoice);
+
+router.get('/clean', cleanWrongMeasures);
